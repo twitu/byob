@@ -10,6 +10,8 @@ class LineType(Enum):
     CENTRE = 1
     TABLE = 2
     PARA = 3
+    HEADER = 4
+    FOOTER = 5
 
 class Rectangle:
 
