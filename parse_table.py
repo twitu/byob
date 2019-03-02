@@ -5,6 +5,8 @@ import json
 from enum import Enum
 from itertools import groupby
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import spell_fixer
+import sys
 
 class LineType(Enum):
     CENTRE = 1
@@ -155,7 +157,9 @@ def get_lines(page_element, margin=5):
             bbox = Rectangle(list(map(float, text_line.attrib["bbox"].split(","))))
             value = ''.join([text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
             value = value.strip()
-            # TODO: filter and correct text value
+            if not spell_fixer.spelling_accept(value):
+                continue
+            value = spell_fixer.spelling_fixer(value)
             word = Word(value, bbox)
             added = False
             for line in lines:
@@ -198,7 +202,7 @@ def get_columns(lines, margin=20):
     return columns
 
 # merge closely spaced words
-def merge_words(lines, margin=10):
+def merge_words(lines, margin=15):
     new_lines = []
     for i, line in enumerate(lines):
         line.words.sort()
@@ -233,19 +237,6 @@ def get_paragraphs(lines, margin=5):
         
     return paras
 
-
-def write_to_doc(paras):
-
-    document = Document()
-
-    for para in paras:
-        value = " ".join([" ".join([word.value for word in line]) for line in para])
-        print(value)
-        print()
-        document.add_paragraph(value)
-        
-    document.save("demo.docx")
-
 def write_to_csv(lines):
 
     columns = get_columns(lines)
@@ -266,7 +257,7 @@ def write_to_csv(lines):
             csvwriter.writerow(csv_line)
 
 
-def centre_aligned(line, page_box, margin=15, cutoff=0.6):
+def centre_aligned(line, page_box, margin=15, cutoff=0.8):
     mid = (page_box.x1 + page_box.x2)/2
     width = page_box.x2 - page_box.x1
 
@@ -279,6 +270,7 @@ def centre_aligned(line, page_box, margin=15, cutoff=0.6):
     return False
 
 # function to check for table headings
+# table headings takes json file with example headings to compare
 def detect_heading(lines,file):
     with open(file) as f:
         data = json.load(f)
@@ -293,17 +285,98 @@ def detect_heading(lines,file):
                 
     return flag
 
+
+# print centre aligned text as bold and centred in doc
 def print_centre_text(lines, document):
     for line in lines:
         para = document.add_paragraph()
         para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         para.add_run(line.__str__()).bold = True
+        para.add_run("\n")
 
+
+# print paragraph
+def print_paragraph_text(lines, document, page_box, cutoff=0.6):
+    first_line = lines[0]
+    para = document.add_paragraph()
+    para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    # make first line bold if it occupies less than width of page
+    para.add_run("\n")
+    if (first_line.box.x2 - first_line.box.x1)/(page_box.x2 - page_box.x1) < cutoff:
+        para.add_run(first_line.__str__()).bold = True
+        para.add_run("\n")
+        lines.pop(0)
+    para.add_run(" ".join([line.__str__() for line in lines]))
+    para.add_run("\n")
+
+
+# print table
+def print_table_text(lines, document):
+
+    columns = get_columns(lines)
+    columns.sort()
+    for i, column in enumerate(columns):
+        for word in column.words:
+            word.col_num = i
+    max_col = len(columns)
+
+    table = document.add_table(rows=len(lines), cols=max_col)
+    for line, row in zip(lines, table.rows):
+        for word in line:
+            row.cells[word.col_num].text = word.value
+
+def filter_and_mark(lines, page_box):
+
+    # get lines with multiple unmerged words
+    # these have high chance of forming tables
+    for line in lines:
+        if len(line.words) > 1 and line.type == -1:
+            line.type = LineType.TABLE
+
+    # get centre text
+    for line in lines:
+        if centre_aligned(line, page_box) and line.type == -1:
+            line.type = LineType.CENTRE
+
+    # filter large lines that are likely to be part of paragraphs
+    for line in lines:
+        if (line.box.x2 - line.box.x1)/page_width > 0.6 and line.type == -1:
+            line.type = LineType.PARA
+
+    # get small lines adjacent to table lines even if they have one word
+    # these can be empty entries in the table or headings of entries
+    # add rest of small lines to paragraph lines
+    for i, line in enumerate(lines):
+        to_add = False
+        margin = 15
+
+        # first check lower line and assign same type
+        if i < len(lines) - 1 and \
+            lines[i+1].box.x2 + margin > line.box.x1 and \
+                line.type != -1 and lines[i+1].type != -1:
+            line.type = lines[i+1].type
+
+        # next check upper line and assign same type
+        if i > 0 and lines[i-1].box.x1 - margin > line.box.x2 and \
+            line.type != -1 and lines[i-1].type != -1:
+            line.type = lines[i-1].type
+
+        # if line is still not assigned a type make it a paragraph line
+        if line.type == -1:
+            line.type = LineType.PARA
+
+    # make indiviual table lines as para lines
+    for i, line in enumerate(lines):
+        if 0 < i < len(lines) - 1 and lines[i].type == LineType.TABLE and \
+            lines[i-1].type == lines[i+1].type:
+            line.type = LineType.PARA
     
+
 if __name__ == "__main__":
     document = Document()
+    file_name = sys.argv[1]
 
-    file_name = "test2.xml"
     xml_file = tree.parse(file_name).getroot()
     for page in xml_file.getchildren():
         page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
@@ -313,48 +386,19 @@ if __name__ == "__main__":
         lines = merge_words(lines)
         lines.sort(reverse=True)
 
-        to_csv = False
-        if detect_heading(lines, "heading.json"):
-            to_csv = True
+        # filter and mark names with appropriate types
+        filter_and_mark(lines, page_box)
 
-        # get centre text
-        for line in lines:
-            if centre_aligned(line, page_box) and line.type == -1:
-                line.type = LineType.CENTRE
-
-        # get lines with multiple unmerged words
-        # these have high chance of forming tables
-        for line in lines:
-            if len(line.words) > 1 and line.type == -1:
-                line.type = LineType.TABLE
-
-        # filter large lines that are likely to be part of paragraphs
-        for line in lines:
-            if (line.box.x2 - line.box.x1)/page_width > 0.6 and line.type == -1:
-                line.type = LineType.PARA
-
-        # get small lines adjacent to table lines even if they have one word
-        # these can be empty entries in the table or headings of entries
-        # add rest of small lines to paragraph lines
-        for i, line in enumerate(lines):
-            to_add = False
-            margin = 15
-
-            # first check lower line and assign same type
-            if i < len(lines) - 1 and \
-                lines[i+1].box.x2 + margin > line.box.x1 and \
-                    line.type != -1:
-                line.type = lines[i+1].type
-
-            # next check upper line and assign same type
-            if i > 0 and lines[i-1].box.x1 - margin > line.box.x2 and \
-                line.type != -1:
-                line.type = lines[i-1].type
-
-        # sort all types of lines
+        # group lines by type and print in docx
         for k, g in groupby(lines, key=lambda x: x.type):
             if k == LineType.CENTRE:
                 print_centre_text(list(g), document)
+            elif k == LineType.PARA:
+                print_paragraph_text(list(g), document, page_box)
+            elif k == LineType.TABLE:
+                print_table_text(list(g), document)
 
+        # create new page break after adding all lines from current page of pdf
+        document.add_page_break()
 
-    document.save("demo.docx")
+    document.save(file_name.split(".")[0] + ".docx")

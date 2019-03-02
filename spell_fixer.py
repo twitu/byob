@@ -44,7 +44,7 @@ if not sym_spell.load_dictionary(dictionary_path, term_index, count_index):
     exit(0)
 
 
-def spell_fixer(word):
+def spelling_fixer(word):
     '''
     Takes a string and returns its spell corrected value
 
@@ -52,10 +52,14 @@ def spell_fixer(word):
     max_ed_lookup = 2
     suggestions = sym_spell.lookup(word, Verbosity.CLOSEST,
                                    max_ed_lookup)
-    return suggestions[0].term
+    
+    if not suggestions:
+        return word
+    else:
+        return suggestions[0].term
 
 
-def spell_accept(word):
+def spelling_accept(word):
     '''
     Takes a string and returns a bool telling
     whether the word should be accepted as a
