@@ -103,13 +103,10 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-<<<<<<< d5e6de2aa0b5a1f9a02472d76d825c555d69232f
 
-dataset/
-=======
 # data files
 *.txt
 *.pdf
 *.docx
 *.csv
->>>>>>> Assigning each line a line type
+dataset/
