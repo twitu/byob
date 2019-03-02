@@ -1,6 +1,15 @@
 import xml.etree.ElementTree as tree
 from docx import Document
 import csv
+import json
+from enum import Enum
+from itertools import groupby
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
+class LineType(Enum):
+    CENTRE = 1
+    TABLE = 2
+    PARA = 3
 
 class Rectangle:
 
@@ -52,6 +61,7 @@ class Line:
         self.box = word.box
         self.words = [word]
         self.row_num = 0
+        self.type = -1
 
     # add words to list and change bounding box accordingly
     def add_word(self, word):
@@ -170,7 +180,7 @@ def filter_centre_word(page_box, word):
 
 
 # take lines of words and create columns from them
-def get_columns(lines, margin=10):
+def get_columns(lines, margin=20):
     columns = []
     for line in lines:
         for word in line:
@@ -186,9 +196,10 @@ def get_columns(lines, margin=10):
     return columns
 
 # merge closely spaced words
-def merge_words(lines, margin=15):
+def merge_words(lines, margin=10):
     new_lines = []
-    for line in lines:
+    for i, line in enumerate(lines):
+        line.words.sort()
         merger = line.words[0]
         new_line = Line(merger)
         for i, word in enumerate(line.words[1:]):
@@ -240,13 +251,13 @@ def write_to_csv(lines):
     for i, column in enumerate(columns):
         for word in column.words:
             word.col_num = i
+    max_col = len(columns)
 
     with open("table.csv", "w") as csvfile:
         csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         for line in lines:
             line.words.sort()
-            max_col = line.words[-1].col_num
-            csv_line = [None]*(max_col + 1)
+            csv_line = [None]*(max_col)
             for word in line.words:
                 csv_line[word.col_num] = word.value
             print(csv_line)
@@ -265,96 +276,83 @@ def centre_aligned(line, page_box, margin=15, cutoff=0.6):
 
     return False
 
+# function to check for table headings
+def detect_heading(lines,file):
+    with open(file) as f:
+        data = json.load(f)
+    heading_list = data.keys()
+    flag = False
+    for line in lines:
+        for word in line.words:
+            for heading in heading_list:
+                if word.value.lower() == heading.lower():
+                    flag = True
+                    break
+                
+    return flag
+
+def print_centre_text(lines, document):
+    for line in lines:
+        para = document.add_paragraph()
+        para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        para.add_run(line.__str__()).bold = True
+
     
 if __name__ == "__main__":
-    file_name = "para.xml"
+    document = Document()
+
+    file_name = "test2.xml"
     xml_file = tree.parse(file_name).getroot()
-    page = xml_file.getchildren()[0]
-    page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
-    page_mid = (page_box.x1 + page_box.x2)/2
-    page_width = page_box.x2 - page_box.x1
-    lines = get_lines(page)
-    lines = merge_words(lines)
-    lines.sort(reverse=True)
+    for page in xml_file.getchildren():
+        page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
+        page_mid = (page_box.x1 + page_box.x2)/2
+        page_width = page_box.x2 - page_box.x1
+        lines = get_lines(page)
+        lines = merge_words(lines)
+        lines.sort(reverse=True)
 
-    filter_lines = []
-    centre_text = []
-    table_lines = []
-    paragraph_lines = []
+        to_csv = False
+        if detect_heading(lines, "heading.json"):
+            to_csv = True
 
-    for line in lines:
-        print(line)
-    print()
+        # get centre text
+        for line in lines:
+            if centre_aligned(line, page_box) and line.type == -1:
+                line.type = LineType.CENTRE
 
-    # get centre text
-    for line in lines:
-        if centre_aligned(line, page_box):
-            centre_text.append(line)
-        else:
-            filter_lines.append(line)
-    lines = filter_lines
+        # get lines with multiple unmerged words
+        # these have high chance of forming tables
+        for line in lines:
+            if len(line.words) > 1 and line.type == -1:
+                line.type = LineType.TABLE
 
-    # get lines with multiple unmerged words
-    # these have high chance of forming tables
-    filter_lines = []
-    for line in lines:
-        if len(line.words) > 1:
-            table_lines.append(line)
-        else:
-            filter_lines.append(line)
-    lines = filter_lines
+        # filter large lines that are likely to be part of paragraphs
+        for line in lines:
+            if (line.box.x2 - line.box.x1)/page_width > 0.6 and line.type == -1:
+                line.type = LineType.PARA
 
-    # filter large lines that are likely to be part of paragraphs
-    filter_lines = []
-    for line in lines:
-        if (line.box.x2 - line.box.x1)/page_width > 0.6:
-            paragraph_lines.append(line)
-        else:
-            filter_lines.append(line)
-    lines = filter_lines
+        # get small lines adjacent to table lines even if they have one word
+        # these can be empty entries in the table or headings of entries
+        # add rest of small lines to paragraph lines
+        for i, line in enumerate(lines):
+            to_add = False
+            margin = 15
 
-    for line in lines:
-        print(line)
-    print()
+            # first check lower line and assign same type
+            if i < len(lines) - 1 and \
+                lines[i+1].box.x2 + margin > line.box.x1 and \
+                    line.type != -1:
+                line.type = lines[i+1].type
 
-    # get small lines adjacent to table lines even if they have one word
-    # these can be empty entries in the table or headings of entries
-    # add rest of small lines to paragraph lines
-    for line in lines:
-        to_add = False
-        margin = 15
-        for table_line in table_lines:
-            if table_line.box.y1 - margin < line.box.y2 and line.box.y1 < table_line.box.y1 or \
-                table_line.box.y2 + margin > line.box.y1 and line.box.y2 > table_line.box.y2:
-                to_add = True
+            # next check upper line and assign same type
+            if i > 0 and lines[i-1].box.x1 - margin > line.box.x2 and \
+                line.type != -1:
+                line.type = lines[i-1].type
 
-        if to_add:
-            table_lines.append(line)
-        else:
-            paragraph_lines.append(line)
+        # sort all types of lines
+        for k, g in groupby(lines, key=lambda x: x.type):
+            if k == LineType.CENTRE:
+                print_centre_text(list(g), document)
 
-    # get paragraphs
-    paragraphs = get_paragraphs(paragraph_lines, 10)
 
-    # sort all types of lines
-    paragraphs.sort(reverse=True)
-    table_lines.sort(reverse=True)
-    centre_text.sort(reverse=True)
-
-    for line in table_lines:
-        print(line)
-    print()
-
-    for paragraph in paragraphs:
-        # first line should be bold if its width is less than paragraph width
-        line = paragraph.lines[0]
-        if (line.box.x2-line.box.x1)/(paragraph.box.x2-paragraph.box.x1) < 0.6:
-            print(line)
-
-        for line in paragraph.lines[1:]:
-            print(line.__str__(), sep=" ")
-        print()
-
-    # lines.sort(reverse=True)
-    # paras = get_paragraphs(lines)
-    # write_to_doc(paras)
+    document.save("demo.docx")
