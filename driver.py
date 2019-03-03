@@ -49,3 +49,4 @@ if __name__ == '__main__':
 
     generate_readables(dir_path)
     # Call functions to convert to xml
+    # Use arguments from parsing_modes['key']
