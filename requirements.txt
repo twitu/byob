@@ -6,3 +6,5 @@ reportlab==3.4.0
 six==1.12.0
 sortedcontainers==2.1.0
 symspellpy==6.3.7
+python-docx==0.8.10
+pypdfocr==5.4.1
