@@ -8,16 +8,22 @@ parsing_modes = {
         'r_margin': 20,
         'c_margin': 10
         'l_margin': 20,
+        'm_margin': 20,
+        'p_margin': 20
     },
     'dense': {
         'r_margin': 20,
         'c_margin': 10
         'l_margin': 20,
+        'm_margin': 20,
+        'p_margin': 20
     },
     'default':{
         'r_margin': 20,
         'c_margin': 10
         'l_margin': 20,
+        'm_margin': 20,
+        'p_margin': 20
     }
 }
 
@@ -42,7 +48,7 @@ if __name__ == '__main__':
                 print(" -", mode_names)
             exit()
     else:
-        args.mode = parsing_modes['default']
+        args.mode = 'default'
     
     if args.dir-path is None:
         print("Please enter file / directory path for the files to convert")
@@ -63,8 +69,8 @@ if __name__ == '__main__':
             page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
             page_mid = (page_box.x1 + page_box.x2)/2
             page_width = page_box.x2 - page_box.x1
-            lines = get_lines(page)
-            lines = merge_words(lines)
+            lines = get_lines(page, parsing_modes[args.mode]['l_margin'])
+            lines = merge_words(lines, parsing_modes[args.mode]['m_margin'])
             lines.sort(reverse=True)
 
             # filter and mark names with appropriate types
