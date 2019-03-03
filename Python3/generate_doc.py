@@ -5,6 +5,7 @@ import json
 from enum import Enum
 from itertools import groupby
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.shared import Pt, Inches
 import sys
 from text_objects import Rectangle, Word, Line, LineType, Column
 import spell_fixer
@@ -27,7 +28,6 @@ def get_lines(page_element, margin=10):
             value = value.strip()
             if not spell_fixer.spelling_accept(value):
                 continue
-            value = spell_fixer.spelling_fixer(value)
             word = Word(value, bbox)
             added = False
             for line in lines:
@@ -81,18 +81,18 @@ def merge_words(lines, margin=15):
     return new_lines
 
 
-def get_paragraphs(lines, margin=5):
+def get_paragraphs(lines, margin=20):
     paras = []
-    for line in lines:
-        added = False
-        for para in paras:
-            if para.box.y1 - margin < line.box.y2 and line.box.y1 < para.box.y1 or \
-                    para.box.y2 + margin > line.box.y1 and line.box.y2 > para.box.y2:
-                para.add_line(line)
-                added = True
-
-        if not added:
-            paras.append(Paragraph(line))
+    para = []
+    for i, line in enumerate(lines):
+        if i < len(lines) - 1:
+            para.append(line)
+            if line.box.y1 - margin > lines[i+1].box.y2:
+                paras.append(para)
+                para = []
+        else:
+            para.append(line)
+            paras.append(para)
 
     return paras
 
@@ -120,29 +120,33 @@ def print_centre_text(lines, document):
 
 # print paragraph
 def print_paragraph_text(lines, document, page_box, cutoff=0.6):
-    first_line = lines[0]
-    para = document.add_paragraph()
-    para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
-    # make first line bold if it occupies less than width of page
-    para.add_run("\n")
-    if (first_line.box.x2 - first_line.box.x1)/(page_box.x2 - page_box.x1) < cutoff:
-        para.add_run(first_line.__str__()).bold = True
+    paras = get_paragraphs(lines)
+
+    for para_lines in paras:
+        first_line = para_lines[0]
+        para = document.add_paragraph()
+        para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+        # change font for each paragraph
+        style = document.styles['Normal']
+        font = style.font
+        font.name = 'Arial'
+        font.size = Pt(10)
+        para.style = style
+
+        # make first line bold if it occupies less than width of page
         para.add_run("\n")
-        lines.pop(0)
-    para.add_run(" ".join([line.__str__() for line in lines]))
-    para.add_run("\n")
+        if (first_line.box.x2 - first_line.box.x1)/(page_box.x2 - page_box.x1) < cutoff:
+            para.add_run(first_line.__str__()).bold = True
+            para.add_run("\n")
+            para_lines.pop(0)
+        para.add_run(" ".join([line.__str__() for line in para_lines]))
+        para.add_run("\n")
 
 
 # print table
-def print_table_text(lines, document):
-
-    columns = get_columns(lines)
-    columns.sort()
-    for i, column in enumerate(columns):
-        for word in column.words:
-            word.col_num = i
-    max_col = len(columns)
+def print_table_text(lines, document, max_col):
 
     table = document.add_table(rows=len(lines), cols=max_col)
     for line, row in zip(lines, table.rows):
@@ -150,7 +154,7 @@ def print_table_text(lines, document):
             row.cells[word.col_num].text = word.value
 
 
-def filter_and_mark(lines, page_box):
+def filter_and_mark(lines, page_box, page_width):
 
     # get lines with multiple unmerged words
     # these have high chance of forming tables
@@ -203,7 +207,13 @@ def process_doc(file_name, margins):
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box)
+        filter_and_mark(lines, page_box, page_width)
+
+        # correct spellings and segmentation for paragraph and table lines
+        for line in lines:
+            if line.type in (LineType.TABLE, LineType.PARA):
+                for word in line:
+                    word.value = spell_fixer.spelling_fixer(word.value)
 
         # group lines by type and print in docx
         for k, g in groupby(lines, key=lambda x: x.type):
@@ -212,9 +222,27 @@ def process_doc(file_name, margins):
             elif k == LineType.PARA:
                 print_paragraph_text(list(g), document, page_box)
             elif k == LineType.TABLE:
-                print_table_text(list(g), document)
+                columns = get_columns(list(g))
+                columns.sort()
+                for i, column in enumerate(columns):
+                    for word in column.words:
+                        word.col_num = i
+                max_col = len(columns)
+
+                # don't make tables for single columns
+                if max_col < 2:
+                    print_paragraph_text(list(g), document, page_box)
+                else:
+                    print_table_text(list(g), document, max_col)
 
         # create new page break after adding all lines from current page of pdf
         document.add_page_break()
+
+    # change margins
+    for section in document.sections:
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.2)
+        section.right_margin = Inches(0.2)
 
     document.save(file_name.split(".")[0] + ".docx")
