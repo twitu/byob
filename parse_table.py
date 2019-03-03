@@ -384,34 +384,3 @@ def filter_and_mark(lines, page_box):
         if 0 < i < len(lines) - 1 and lines[i].type == LineType.TABLE and \
                 lines[i-1].type == lines[i+1].type:
             line.type = LineType.PARA
-
-
-if __name__ == "__main__":
-    document = Document()
-    file_name = sys.argv[1]
-
-    xml_file = tree.parse(file_name).getroot()
-    for page in xml_file.getchildren():
-        page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
-        page_mid = (page_box.x1 + page_box.x2)/2
-        page_width = page_box.x2 - page_box.x1
-        lines = get_lines(page)
-        lines = merge_words(lines)
-        lines.sort(reverse=True)
-
-        # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box)
-
-        # group lines by type and print in docx
-        for k, g in groupby(lines, key=lambda x: x.type):
-            if k == LineType.CENTRE:
-                print_centre_text(list(g), document)
-            elif k == LineType.PARA:
-                print_paragraph_text(list(g), document, page_box)
-            elif k == LineType.TABLE:
-                print_table_text(list(g), document)
-
-        # create new page break after adding all lines from current page of pdf
-        document.add_page_break()
-
-    document.save(file_name.split(".")[0] + ".docx")
