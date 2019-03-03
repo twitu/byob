@@ -8,6 +8,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 import spell_fixer
 import sys
 
+
 class LineType(Enum):
     CENTRE = 1
     TABLE = 2
@@ -15,8 +16,8 @@ class LineType(Enum):
     HEADER = 4
     FOOTER = 5
 
-class Rectangle:
 
+class Rectangle:
     def __init__(self, values):
         self.x1 = values[0]
         self.y1 = values[1]
@@ -123,6 +124,7 @@ class Column:
     def __str__(self):
         return "\n".join([word.__str__() for word in self.words])
 
+
 class Paragraph:
 
     def __init__(self, line):
@@ -146,16 +148,22 @@ class Paragraph:
     def __gt__(self, value):
         return self.box.y1 > value.box.x1
 
+
 # group words that are horizontally in the same line
 def get_lines(page_element, margin=5):
     lines = []
-    page_box = Rectangle(list(map(float, page_element.attrib["bbox"].split(","))))
+    page_box = Rectangle(
+        list(map(float, page_element.attrib["bbox"].split(","))))
     for text_box in page_element.getchildren():
-        if not text_box.tag == "textbox": continue
+        if not text_box.tag == "textbox":
+            continue
         for text_line in text_box.getchildren():
-            if not text_line.tag == "textline": continue
-            bbox = Rectangle(list(map(float, text_line.attrib["bbox"].split(","))))
-            value = ''.join([text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
+            if not text_line.tag == "textline":
+                continue
+            bbox = Rectangle(
+                list(map(float, text_line.attrib["bbox"].split(","))))
+            value = ''.join(
+                [text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
             value = value.strip()
             if not spell_fixer.spelling_accept(value):
                 continue
@@ -167,7 +175,7 @@ def get_lines(page_element, margin=5):
                 if (line.box.y1 - margin < bbox.y1 < line.box.y1 + margin) and (line.box.y2 - margin < bbox.y2 < line.box.y2 + margin):
                     line.add_word(word)
                     added = True
-            
+
             if not added:
                 lines.append(Line(word))
 
@@ -179,7 +187,7 @@ def filter_centre_word(page_box, word):
     centre = page_box.x2/2
     width = 0.15
     if (word.box.x1 < centre < word.box.x2) and \
-        (word.box.x2 - word.box.x1)/(page_box.x2 - page_box.x1) > width:
+            (word.box.x2 - word.box.x1)/(page_box.x2 - page_box.x1) > width:
         return True
     else:
         return False
@@ -193,13 +201,14 @@ def get_columns(lines, margin=20):
             added = False
             for column in columns:
                 if column.box.x1 - margin < word.box.x1 < column.box.x1 + margin \
-                or column.box.x2 - margin < word.box.x2 < column.box.x2 + margin \
-                or column.box.x1 + margin < word.box.x1 and word.box.x2 < column.box.x2:
+                        or column.box.x2 - margin < word.box.x2 < column.box.x2 + margin \
+                        or column.box.x1 + margin < word.box.x1 and word.box.x2 < column.box.x2:
                     column.words.append(word)
                     added = True
             if not added:
                 columns.append(Column(word))
     return columns
+
 
 # merge closely spaced words
 def merge_words(lines, margin=15):
@@ -228,14 +237,15 @@ def get_paragraphs(lines, margin=5):
         added = False
         for para in paras:
             if para.box.y1 - margin < line.box.y2 and line.box.y1 < para.box.y1 or \
-                para.box.y2 + margin > line.box.y1 and line.box.y2 > para.box.y2:
+                    para.box.y2 + margin > line.box.y1 and line.box.y2 > para.box.y2:
                 para.add_line(line)
                 added = True
 
         if not added:
             paras.append(Paragraph(line))
-        
+
     return paras
+
 
 def write_to_csv(lines):
 
@@ -247,7 +257,8 @@ def write_to_csv(lines):
     max_col = len(columns)
 
     with open("table.csv", "w") as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+        csvwriter = csv.writer(csvfile, delimiter=',',
+                               quotechar='"', quoting=csv.QUOTE_ALL)
         for line in lines:
             line.words.sort()
             csv_line = [None]*(max_col)
@@ -269,9 +280,10 @@ def centre_aligned(line, page_box, margin=15, cutoff=0.8):
 
     return False
 
+
 # function to check for table headings
 # table headings takes json file with example headings to compare
-def detect_heading(lines,file):
+def detect_heading(lines, file):
     with open(file) as f:
         data = json.load(f)
     heading_list = data.keys()
@@ -282,7 +294,7 @@ def detect_heading(lines,file):
                 if word.value.lower() == heading.lower():
                     flag = True
                     break
-                
+
     return flag
 
 
@@ -326,6 +338,7 @@ def print_table_text(lines, document):
         for word in line:
             row.cells[word.col_num].text = word.value
 
+
 def filter_and_mark(lines, page_box):
 
     # get lines with multiple unmerged words
@@ -359,7 +372,7 @@ def filter_and_mark(lines, page_box):
 
         # next check upper line and assign same type
         if i > 0 and lines[i-1].box.x1 - margin > line.box.x2 and \
-            line.type != -1 and lines[i-1].type != -1:
+                line.type != -1 and lines[i-1].type != -1:
             line.type = lines[i-1].type
 
         # if line is still not assigned a type make it a paragraph line
@@ -369,36 +382,5 @@ def filter_and_mark(lines, page_box):
     # make indiviual table lines as para lines
     for i, line in enumerate(lines):
         if 0 < i < len(lines) - 1 and lines[i].type == LineType.TABLE and \
-            lines[i-1].type == lines[i+1].type:
+                lines[i-1].type == lines[i+1].type:
             line.type = LineType.PARA
-    
-
-if __name__ == "__main__":
-    document = Document()
-    file_name = sys.argv[1]
-
-    xml_file = tree.parse(file_name).getroot()
-    for page in xml_file.getchildren():
-        page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
-        page_mid = (page_box.x1 + page_box.x2)/2
-        page_width = page_box.x2 - page_box.x1
-        lines = get_lines(page)
-        lines = merge_words(lines)
-        lines.sort(reverse=True)
-
-        # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box)
-
-        # group lines by type and print in docx
-        for k, g in groupby(lines, key=lambda x: x.type):
-            if k == LineType.CENTRE:
-                print_centre_text(list(g), document)
-            elif k == LineType.PARA:
-                print_paragraph_text(list(g), document, page_box)
-            elif k == LineType.TABLE:
-                print_table_text(list(g), document)
-
-        # create new page break after adding all lines from current page of pdf
-        document.add_page_break()
-
-    document.save(file_name.split(".")[0] + ".docx")
