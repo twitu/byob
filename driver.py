@@ -48,3 +48,4 @@ if __name__ == '__main__':
         exit()
 
     generate_readables(dir_path)
+    # Call functions to convert to xml
