@@ -1,0 +1,11 @@
+argh==0.26.2
+evernote==1.25.3
+httplib2==0.12.1
+oauth2==1.9.0.post1
+pathtools==0.1.2
+Pillow==5.4.1
+PyPDF2==1.26.0
+pypdfocr==0.9.1
+PyYAML==3.13
+reportlab==3.4.0
+watchdog==0.9.0
