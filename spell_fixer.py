@@ -1,5 +1,6 @@
 import os
 from symspellpy.symspellpy import SymSpell, Verbosity
+from text_objects import Line, Word, Rectangle, LineType
 
 term_index = 0
 count_index = 1
@@ -109,17 +110,19 @@ def set_headers(lines):
     '''
     status = 0
     for line in lines:
+        if line.type == -1:
+            continue
         if is_in_top_quarter(line):
             if gen_filter(line, PL_LINES):
                 status = 1
-                line.type = 4
+                line.type = LineType.HEADER
             elif gen_filter(line, HEADER_ENDINGS):
-                line.type = 4
+                line.type = LineType.HEADER
                 break
             elif status == 1:
                 break
             else:
-                line.type = 4
+                line.type = LineType.HEADER
         else:
             break
 
@@ -136,13 +139,15 @@ def set_footers(lines):
     lines.sort(reverse = True)
     status = 0
     for line in lines:
+        if line.type == -1:
+            continue
         if is_in_lowest_quarter(line):
             if gen_filter(line, FOOTERS):
                 status = 1
-                line.type = 5
+                line.type = LineType.FOOTER
             elif status == 1:
                 if gen_filter(line, FOOTERS):
-                    line.type = 5
+                    line.type = LineType.FOOTER
                 break
         else:
             break
