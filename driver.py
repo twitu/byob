@@ -43,5 +43,8 @@ if __name__ == '__main__':
     else:
         args.mode = parsing_modes['default']
     
+    if args.dir-path is None:
+        print("Please enter directory path for the files to convert")
+        exit()
+
     generate_readables(dir_path)
-    
