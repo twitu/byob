@@ -34,8 +34,8 @@ def make_argument_parser():
         description="Extract Profit and Loss Tables from financial report PDFs")
     parser.add_argument(
         "-m", "--mode", help="set default parsing mode", required = False)
-    parser.add_argument(
-        "-d", "--dir-path", help="set directory path")
+    parser.add_argument("-c", "--csv", help="return a csv output for P&L tables", action="store_true")
+    parser.add_argument("-d", "--dir-path", help="file/directory path for conversion")
     return parser
 
 
@@ -65,5 +65,6 @@ if __name__ == '__main__':
     for file_name in files:
         generate_doc.process_doc(file_name, parsing_modes[args.mode])
 
-    # add argument for generating csv
-    # use generate_csv.process_csv(file_name) to generate csv of same name
+    if args.csv:
+        for file_name in files:
+            generate_csv.process(file_name)
