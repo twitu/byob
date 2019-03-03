@@ -8,6 +8,47 @@ import spell_fixer
 import sys
 from text_objects import Rectangle, Word, Line, LineType, Column
 
+triage_data = {
+    "interest Receivable and similar income":"Interest Receivable",
+    "other interest Receivable and similar income":"Interest Receivable",
+    "interest payable and similar expenses":"Interest payable and similar charges",
+    "interest payable and expenses":"Interest payable and similar charges",
+    "profit before taxation":"Profit on ordinary activities before taxation",
+    "loss before taxation":"Profit on ordinary activities before taxation",
+    "profit before tax":"Profit on ordinary activities before taxation",
+    "tax on profit":"Tax on profit on ordinary activities",
+    "tax on loss":"Tax on profit on ordinary activities",
+    "cost of raw material and consumables":"Distribution Costs",
+    "cost of materials":"Distribution Costs",
+    "staff costs":"Administrative Expenses",
+    "tax":"Tax on profit on ordinary activities",
+    "taxation":"Tax on profit on ordinary activities",
+    "profit":"Profit for the financial year",
+    "profit for the period":"Profit for the financial year",
+    "loss for the period":"Profit for the financial year",
+    "profit after tax":"Profit for the financial year",
+    "profit for the financial year and total comprehensive income":"Profit for the financial year",
+    "loss for the financial year and total comprehensive income":"Profit for the financial year",
+    "loss for the financial year":"Profit for the financial year", 
+    "loss for the financial year after":"Profit for the financial year",    
+    "other charges":"Interest payable and similar charges",
+    "profit or (loss) for Period":"Profit for the financial year",
+    "operating loss":"Operating Profit",
+    "gross profit or (Loss)":"Gross Profit",
+    "operating profit or (Loss)": "Operating Profit",
+    "profit or (loss) before tax":"Profit on ordinary activities before taxation",
+    "gross profit/(loss)":"Gross Profit",
+    "profit/(loss)":"Profit for the financial year",
+    "less cost of sales":"Cost of sales",
+    "interest payable":"Interest payable and similar charges",
+    "gross surplus or (deficit)":"Gross Profit",
+    "surplus or (deficit) before tax":"Profit on ordinary activities before taxation",
+    "tax on surplus":"Tax on profit on ordinary activities",
+    "surplus or (deficit) for the period":"Profit for the financial year",
+    "operating profit and profit for the financial year before members' remuneration and profit shares available for discretionary division among members ":"Profit for the financial year",
+    "profit for the financial period before members' remuneration and profit shares available for discretionary division among members ":"Profit for the financial year",
+    "profit after taxation being profit for the financial year":"Profit for the financial year"
+}
 
 # group words that are horizontally in the same line
 def get_lines(page_element, margin=5):
@@ -25,6 +66,10 @@ def get_lines(page_element, margin=5):
             value = ''.join(
                 [text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
             value = value.strip()
+            if value[0] == '(' or value[-1] == ')':
+                value.rstrip(')')
+                value.lstrip('(')
+                value = "-" + value
             if not spell_fixer.spelling_accept(value):
                 continue
             value = spell_fixer.spelling_fixer(value)
@@ -110,19 +155,13 @@ def detect_heading(lines, file):
     return flag
 
 
-def filter_and_mark(lines, page_box):
+def filter_and_mark(lines, page_box, page_width):
 
     # get lines with multiple unmerged words
     # these have high chance of forming tables
     for line in lines:
         if line.type == -1 and len(line.words) > 1:
             line.type = LineType.TABLE
-
-    # set headers
-    spell_fixer.set_headers(lines)
-
-    # set footers
-    spell_fixer.set_footers(lines)
 
     # get centre text
     for line in lines:
@@ -139,7 +178,7 @@ def filter_and_mark(lines, page_box):
     # add rest of small lines to paragraph lines
     for i, line in enumerate(lines):
         to_add = False
-        margin = 15
+        margin = 20
 
         # first check lower line and assign same type
         if i < len(lines) - 1 and \
@@ -157,8 +196,7 @@ def filter_and_mark(lines, page_box):
             line.type = LineType.TABLE
 
 
-if __name__ == "__main__":
-    file_name = "00683982_ocr_10.xml"
+def process_csv(file_name):
 
     xml_file = tree.parse(file_name).getroot()
     for page in xml_file.getchildren():
@@ -170,13 +208,16 @@ if __name__ == "__main__":
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box)
+        filter_and_mark(lines, page_box, page_width)
 
         # check if page contains table for profit and loss by checking header
         if spell_fixer.p_l_filter(lines):
 
             # get all tables lines
-            table_lines = filter(lambda x: x.type == LineType.TABLE, lines)
+            table_lines = []
+            for line in lines:
+                if line.type == LineType.TABLE:
+                    table_lines.append(line)
 
             # write to csv
             columns = get_columns(table_lines)
@@ -186,7 +227,20 @@ if __name__ == "__main__":
                     word.col_num = i
             max_col = len(columns)
 
-            with open("table.csv", "w") as csvfile:
+            # make lower
+            for line in table_lines:
+                for word in line:
+                    word.value = word.value.lower()
+
+            # perform triaging using json file
+            for line in table_lines:
+                for word in line:
+                    for key in triage_data.keys():
+                        if word.value in key:
+                            word.value = triage_data[key]
+                            break
+
+            with open(file_name.split(".")[0].csv, "w") as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar='"', quoting=csv.QUOTE_ALL)
                 for line in table_lines:

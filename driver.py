@@ -1,7 +1,8 @@
 import argparse
 import sys
 from generate_readables import generate_readables
-from parse_table import *
+import generate_doc
+import generate_csv
 
 parsing_modes = {
     'sparse': {
@@ -62,30 +63,7 @@ if __name__ == '__main__':
         files = [args.dir-path]
 
     for file_name in files:
-        document = Document()
+        generate_doc.process_doc(file_name, parsing_modes[args.mode])
 
-        xml_file = tree.parse(file_name).getroot()
-        for page in xml_file.getchildren():
-            page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
-            page_mid = (page_box.x1 + page_box.x2)/2
-            page_width = page_box.x2 - page_box.x1
-            lines = get_lines(page, parsing_modes[args.mode]['l_margin'])
-            lines = merge_words(lines, parsing_modes[args.mode]['m_margin'])
-            lines.sort(reverse=True)
-
-            # filter and mark names with appropriate types
-            filter_and_mark(lines, page_box)
-
-            # group lines by type and print in docx
-            for k, g in groupby(lines, key=lambda x: x.type):
-                if k == LineType.CENTRE:
-                    print_centre_text(list(g), document)
-                elif k == LineType.PARA:
-                    print_paragraph_text(list(g), document, page_box)
-                elif k == LineType.TABLE:
-                    print_table_text(list(g), document)
-
-            # create new page break after adding all lines from current page of pdf
-            document.add_page_break()
-
-        document.save(file_name.split(".")[0] + ".docx")
+    # add argument for generating csv
+    # use generate_csv.process_csv(file_name) to generate csv of same name

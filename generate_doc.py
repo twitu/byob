@@ -10,7 +10,7 @@ from text_objects import Rectangle, Word, Line, LineType, Column
 import spell_fixer
 
 # group words that are horizontally in the same line
-def get_lines(page_element, margin=7):
+def get_lines(page_element, margin=10):
     lines = []
     page_box = Rectangle(
         list(map(float, page_element.attrib["bbox"].split(","))))
@@ -44,7 +44,7 @@ def get_lines(page_element, margin=7):
 
 
 # take lines of words and create columns from them
-def get_columns(lines, margin=15):
+def get_columns(lines, margin=20):
     columns = []
     for line in lines:
         for word in line:
@@ -61,7 +61,7 @@ def get_columns(lines, margin=15):
 
 
 # merge closely spaced words
-def merge_words(lines, margin=10):
+def merge_words(lines, margin=15):
     new_lines = []
     for i, line in enumerate(lines):
         line.words.sort()
@@ -97,27 +97,6 @@ def get_paragraphs(lines, margin=5):
     return paras
 
 
-def write_to_csv(lines):
-
-    columns = get_columns(lines)
-    columns.sort()
-    for i, column in enumerate(columns):
-        for word in column.words:
-            word.col_num = i
-    max_col = len(columns)
-
-    with open("table.csv", "w") as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=',',
-                               quotechar='"', quoting=csv.QUOTE_ALL)
-        for line in lines:
-            line.words.sort()
-            csv_line = [None]*(max_col)
-            for word in line.words:
-                csv_line[word.col_num] = word.value
-            print(csv_line)
-            csvwriter.writerow(csv_line)
-
-
 def centre_aligned(line, page_box, margin=15, cutoff=0.8):
     mid = (page_box.x1 + page_box.x2)/2
     width = page_box.x2 - page_box.x1
@@ -129,24 +108,6 @@ def centre_aligned(line, page_box, margin=15, cutoff=0.8):
             return True
 
     return False
-
-
-# function to check for table headings
-# table headings takes json file with example headings to compare
-def detect_heading(lines, file):
-    with open(file) as f:
-        data = json.load(f)
-    heading_list = data.keys()
-    flag = False
-    for line in lines:
-        for word in line.words:
-            for heading in heading_list:
-                if word.value.lower() == heading.lower():
-                    flag = True
-                    break
-
-    return flag
-
 
 # print centre aligned text as bold and centred in doc
 def print_centre_text(lines, document):
@@ -229,8 +190,31 @@ def filter_and_mark(lines, page_box):
         if line.type == -1:
             line.type = LineType.PARA
 
-    # make indiviual table lines as para lines
-    for i, line in enumerate(lines):
-        if 0 < i < len(lines) - 1 and lines[i].type == LineType.TABLE and \
-                lines[i-1].type == lines[i+1].type:
-            line.type = LineType.PARA
+
+def process_doc(file_name, margins):
+    document = Document()
+    xml_file = tree.parse(file_name).getroot()
+    for page in xml_file.getchildren():
+        page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
+        page_mid = (page_box.x1 + page_box.x2)/2
+        page_width = page_box.x2 - page_box.x1
+        lines = get_lines(page, margins['l_margin'])
+        lines = merge_words(lines, margins['m_margin'])
+        lines.sort(reverse=True)
+
+        # filter and mark names with appropriate types
+        filter_and_mark(lines, page_box)
+
+        # group lines by type and print in docx
+        for k, g in groupby(lines, key=lambda x: x.type):
+            if k == LineType.CENTRE:
+                print_centre_text(list(g), document)
+            elif k == LineType.PARA:
+                print_paragraph_text(list(g), document, page_box)
+            elif k == LineType.TABLE:
+                print_table_text(list(g), document)
+
+        # create new page break after adding all lines from current page of pdf
+        document.add_page_break()
+
+    document.save(file_name.split(".")[0] + ".docx")
