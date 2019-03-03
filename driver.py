@@ -6,21 +6,21 @@ from parse_table import *
 parsing_modes = {
     'sparse': {
         'r_margin': 20,
-        'c_margin': 10
+        'c_margin': 10,
         'l_margin': 20,
         'm_margin': 20,
         'p_margin': 20
     },
     'dense': {
         'r_margin': 20,
-        'c_margin': 10
+        'c_margin': 10,
         'l_margin': 20,
         'm_margin': 20,
         'p_margin': 20
     },
     'default':{
         'r_margin': 20,
-        'c_margin': 10
+        'c_margin': 10,
         'l_margin': 20,
         'm_margin': 20,
         'p_margin': 20
