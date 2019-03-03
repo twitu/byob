@@ -79,13 +79,19 @@ def gen_filter(line, match_lines):
     '''
     for match_line in match_lines:
         status = True
-        for word in line:
-            if word not in match_line:
+        for word in match_line:
+            flag = False
+            for words in line:
+                if word in words.value:
+                    flag = True
+            
+            if not flag:
                 status = False
+                break
+
         if status:
             return True
-
-        return False
+    return False
 
 
 def p_l_filter(lines):
@@ -128,7 +134,7 @@ def set_headers(lines):
 
 def set_footers(lines):
     '''
-    (Should) reutrn the lines which are a part of footer
+    (Should) return the lines which are a part of footer
     IMPORTANT: 
         1. Send the lines in order of row_num
         2. Works only for p & l tables
