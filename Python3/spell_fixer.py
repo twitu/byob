@@ -1,14 +1,14 @@
 import os
-from symspellpy.symspellpy import SymSpell, Verbosity
+from wordsegment import load, segment
 from text_objects import Line, Word, Rectangle, LineType
+
+# load data for word segementation
+load()
 
 term_index = 0
 count_index = 1
 prefix_length = 7
 max_ed_dictionary = 3
-
-sym_spell = SymSpell(max_ed_dictionary, prefix_length)
-dictionary_path = os.path.join(os.path.dirname(__file__), "dataset/dictionary-en.txt")
 
 UNIMPORTANT_SINGLES = [
     '.',
@@ -40,24 +40,13 @@ FOOTERS = [
 ]
 
 
-if not sym_spell.load_dictionary(dictionary_path, term_index, count_index):
-    print("Dictionary file not found")
-    exit(0)
-
-
 def spelling_fixer(word):
     '''
     Takes a string and returns its spell corrected value
 
     '''
-    max_ed_lookup = 2
-    suggestions = sym_spell.lookup(word, Verbosity.CLOSEST,
-                                   max_ed_lookup)
-    
-    if not suggestions:
-        return word
-    else:
-        return suggestions[0].term
+    return " ".join(segment(word))
+
 
 
 def spelling_accept(word):
