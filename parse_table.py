@@ -150,7 +150,7 @@ class Paragraph:
 
 
 # group words that are horizontally in the same line
-def get_lines(page_element, margin=5):
+def get_lines(page_element, margin=7):
     lines = []
     page_box = Rectangle(
         list(map(float, page_element.attrib["bbox"].split(","))))
@@ -194,7 +194,7 @@ def filter_centre_word(page_box, word):
 
 
 # take lines of words and create columns from them
-def get_columns(lines, margin=20):
+def get_columns(lines, margin=15):
     columns = []
     for line in lines:
         for word in line:
@@ -211,7 +211,7 @@ def get_columns(lines, margin=20):
 
 
 # merge closely spaced words
-def merge_words(lines, margin=15):
+def merge_words(lines, margin=10):
     new_lines = []
     for i, line in enumerate(lines):
         line.words.sort()
