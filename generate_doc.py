@@ -5,10 +5,9 @@ import json
 from enum import Enum
 from itertools import groupby
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-import spell_fixer
 import sys
-from text_objects import Rectangle, Word, Line, Column, LineType
-
+from text_objects import Rectangle, Word, Line, LineType, Column
+import spell_fixer
 
 # group words that are horizontally in the same line
 def get_lines(page_element, margin=7):
@@ -33,7 +32,8 @@ def get_lines(page_element, margin=7):
             added = False
             for line in lines:
                 # check within a margin of error if the text_line can be added in an exisiting line
-                if (line.box.y1 - margin < bbox.y1 < line.box.y1 + margin) and (line.box.y2 - margin < bbox.y2 < line.box.y2 + margin):
+                if (line.box.y1 - margin < bbox.y1 < line.box.y1 + margin) and \
+                    (line.box.y2 - margin < bbox.y2 < line.box.y2 + margin):
                     line.add_word(word)
                     added = True
 
@@ -41,17 +41,6 @@ def get_lines(page_element, margin=7):
                 lines.append(Line(word))
 
     return lines
-
-
-# check if box passes centre line and check if it is greater than certain percentage of page width
-def filter_centre_word(page_box, word):
-    centre = page_box.x2/2
-    width = 0.15
-    if (word.box.x1 < centre < word.box.x2) and \
-            (word.box.x2 - word.box.x1)/(page_box.x2 - page_box.x1) > width:
-        return True
-    else:
-        return False
 
 
 # take lines of words and create columns from them
@@ -227,12 +216,12 @@ def filter_and_mark(lines, page_box):
 
         # first check lower line and assign same type
         if i < len(lines) - 1 and \
-            lines[i+1].box.x2 + margin > line.box.x1 and \
+            lines[i+1].box.y2 + margin > line.box.y1 and \
                 line.type != -1 and lines[i+1].type != -1:
             line.type = lines[i+1].type
 
         # next check upper line and assign same type
-        if i > 0 and lines[i-1].box.x1 - margin > line.box.x2 and \
+        if i > 0 and lines[i-1].box.y1 - margin > line.box.y2 and \
                 line.type != -1 and lines[i-1].type != -1:
             line.type = lines[i-1].type
 
