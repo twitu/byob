@@ -1,9 +1,11 @@
 import os
-from wordsegment import load, segment
+import wordsegment
+import re
+
 from text_objects import Line, Word, Rectangle, LineType
 
 # load data for word segementation
-load()
+wordsegment.load()
 
 term_index = 0
 count_index = 1
@@ -45,7 +47,7 @@ def spelling_fixer(word):
     Takes a string and returns its spell corrected value
 
     '''
-    return " ".join(segment(word))
+    return " ".join(wordsegment.segment(word))
 
 
 

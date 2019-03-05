@@ -1,11 +1,10 @@
 import xml.etree.ElementTree as tree
-from docx import Document
 import csv
 import json
-from enum import Enum
-from itertools import groupby
 import spell_fixer
 import sys
+
+from docx import Document
 from text_objects import Rectangle, Word, Line, LineType, Column
 from text_objects import get_lines, get_columns
 from text_objects import centre_aligned, merge_words

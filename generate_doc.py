@@ -1,17 +1,17 @@
 import xml.etree.ElementTree as tree
-from docx import Document
 import csv
 import json
 import os
-from enum import Enum
+import sys
+import spell_fixer
+
+from docx import Document
 from itertools import groupby
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.shared import Pt, Inches
-import sys
 from text_objects import Rectangle, Word, Line, LineType, Column
 from text_objects import get_lines, get_columns, get_paragraphs
 from text_objects import centre_aligned, merge_words
-import spell_fixer
 
 
 # print centre aligned text as bold and centred in doc
@@ -81,7 +81,6 @@ def filter_and_mark(lines, page_box, page_width):
     # these can be empty entries in the table or headings of entries
     # add rest of small lines to paragraph lines
     for i, line in enumerate(lines):
-        to_add = False
         margin = 15
 
         # first check lower line and assign same type
@@ -91,7 +90,7 @@ def filter_and_mark(lines, page_box, page_width):
             line.type = lines[i+1].type
 
         # next check upper line and assign same type
-        if i > 0 and lines[i-1].box.y1 - margin > line.box.y2 and \
+        if i > 0 and lines[i-1].box.y1 - margin < line.box.y2 and \
                 line.type != -1 and lines[i-1].type != -1:
             line.type = lines[i-1].type
 
@@ -122,12 +121,13 @@ def process_doc(input_path, output_path, margins):
 
         # group lines by type and print in docx
         for k, g in groupby(lines, key=lambda x: x.type):
+            line_group = list(g)
             if k == LineType.CENTRE:
-                print_centre_text(list(g), document)
+                print_centre_text(line_group, document)
             elif k == LineType.PARA:
-                print_paragraph_text(list(g), document, page_box)
+                print_paragraph_text(line_group, document, page_box)
             elif k == LineType.TABLE:
-                columns = get_columns(list(g))
+                columns = get_columns(line_group)
                 columns.sort()
                 for i, column in enumerate(columns):
                     for word in column.words:
@@ -136,9 +136,9 @@ def process_doc(input_path, output_path, margins):
 
                 # don't make tables for single columns
                 if max_col < 2:
-                    print_paragraph_text(list(g), document, page_box)
+                    print_paragraph_text(line_group, document, page_box)
                 else:
-                    print_table_text(list(g), document, max_col)
+                    print_table_text(line_group, document, max_col)
 
         # create new page break after adding all lines from current page of pdf
         document.add_page_break()
@@ -151,3 +151,7 @@ def process_doc(input_path, output_path, margins):
         section.right_margin = Inches(0.2)
 
     document.save(output_path)
+
+if __name__ == "__main__":
+    process_doc("./dataset/dataset_1_3/xml/02639074_ocr.xml", "./dataset/dataset_1_3/doc/02639074_ocr.doc",
+    {"l_margin":20, "m_margin":20})

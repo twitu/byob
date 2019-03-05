@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+
 from os.path import join
 from generate_readables import generate_readables
 from generate_csv import process_csv
@@ -68,6 +69,7 @@ if __name__ == '__main__':
             print("given file path is not valid")
             exit()
 
+    # generate readable pdf ocr files and tehen convert them to parsable xml files
     generate_readables(working_dir, files)
 
     # either convert to doc or to csv
