@@ -1,5 +1,7 @@
 import os
+
 from os.path import join
+from pypdfocr.pypdfocr import PyPDFOCR
 
 def generate_readables(working_dir, files):
     '''
@@ -14,6 +16,7 @@ def generate_readables(working_dir, files):
     xml_dir = join(working_dir, "xml")
     doc_dir = join(working_dir, "doc")
     xml_dir = join(working_dir, "xml")
+    converter = PyPDFOCR()
 
     # generate readable pdf using ocr library
     if not os.path.isdir(ocr_dir):
@@ -28,8 +31,8 @@ def generate_readables(working_dir, files):
         if output_file not in os.listdir(ocr_dir):
             print("converting {} to ocr pdf".format(file_name))
             file_path = join(working_dir, file_name)
-            os.system('pypdfocr ' + file_path)
-            os.rename(file_path, output_path)
+            converter.go(file_path)
+            os.rename(join(working_dir, output_file), output_path)
         else:
             print("ocr version for {} exists".format(file_name))
 
