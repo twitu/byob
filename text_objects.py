@@ -1,4 +1,5 @@
 from enum import Enum
+
 import spell_fixer
 
 class LineType(Enum):
@@ -15,6 +16,9 @@ class Rectangle:
         self.y1 = values[1]
         self.x2 = values[2]
         self.y2 = values[3]
+
+    def copy(self):
+        return Rectangle([self.x1, self.y1, self.x2, self.y2])
 
     # sort in vertically
     def __gt__(self, value):
@@ -54,19 +58,29 @@ class Word:
 
 class Line:
 
-    def __init__(self, word):
-        self.box = word.box
-        self.words = [word]
+    def __init__(self, word=None):
+        if not word:
+            self.box = None
+            self.words = []
+        else:
+            self.box = word.box.copy()
+            self.words = [word]
         self.row_num = 0
         self.type = -1
 
     # add words to list and change bounding box accordingly
     def add_word(self, word):
+        # if it is the first word make bounding box same as word
+        if not self.words:
+            self.box = word.box.copy()
+        else:
+            if word.box.y1 < self.box.y1:
+                self.box.y1 = word.box.y1
+            if self.box.y2 < word.box.y2:
+                self.box.y2 = word.box.y2
+
         self.words.append(word)
-        if word.box.y1 < self.box.y1:
-            self.box.y1 = word.box.y1
-        if self.box.y2 < word.box.y2:
-            self.box.y2 = word.box.y2
+        
 
     # get word from list of words
     def __getitem__(self, item):
@@ -89,7 +103,7 @@ class Column:
 
     def __init__(self, word):
         self.words = [word]
-        self.box = word.box
+        self.box = word.box.copy()
         self.col_num = 0
 
     # add word to column and modify bounding box
@@ -215,17 +229,14 @@ def merge_words(lines, margin=15):
     for i, line in enumerate(lines):
         line.words.sort()
         merger = line.words[0]
-        new_line = Line(merger)
+        new_line = Line()
         for i, word in enumerate(line.words[1:]):
             if merger.box.x2 + margin > word.box.x1:
                 merger.merge(word)
             else:
                 new_line.add_word(merger)
                 merger = word
-        # avoid adding starting word again
-        # happens when line has only one word
-        if merger != new_line.words[0]:
-            new_line.add_word(merger)
+        new_line.add_word(merger)
         new_lines.append(new_line)
     return new_lines
 
