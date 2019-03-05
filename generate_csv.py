@@ -196,9 +196,9 @@ def filter_and_mark(lines, page_box, page_width):
             line.type = LineType.TABLE
 
 
-def process_csv(file_name):
+def process_csv(input_path, output_path):
 
-    xml_file = tree.parse(file_name).getroot()
+    xml_file = tree.parse(input_path).getroot()
     for page in xml_file.getchildren():
         page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
         page_mid = (page_box.x1 + page_box.x2)/2
@@ -236,11 +236,11 @@ def process_csv(file_name):
             for line in table_lines:
                 for word in line:
                     for key in triage_data.keys():
-                        if word.value in key:
+                        if word.value in key.lower():
                             word.value = triage_data[key]
                             break
 
-            with open(file_name.split(".")[0].csv, "w") as csvfile:
+            with open(output_path, "w") as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar='"', quoting=csv.QUOTE_ALL)
                 for line in table_lines:

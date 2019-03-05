@@ -2,6 +2,7 @@ import xml.etree.ElementTree as tree
 from docx import Document
 import csv
 import json
+import os
 from enum import Enum
 from itertools import groupby
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
@@ -195,9 +196,9 @@ def filter_and_mark(lines, page_box, page_width):
             line.type = LineType.PARA
 
 
-def process_doc(file_name, margins):
+def process_doc(input_path, output_path, margins):
     document = Document()
-    xml_file = tree.parse(file_name).getroot()
+    xml_file = tree.parse(input_path).getroot()
     for page in xml_file.getchildren():
         page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
         page_mid = (page_box.x1 + page_box.x2)/2
@@ -211,7 +212,7 @@ def process_doc(file_name, margins):
 
         # correct spellings and segmentation for paragraph and table lines
         for line in lines:
-            if line.type in (LineType.TABLE, LineType.PARA):
+            if line.type in [LineType.PARA, LineType.TABLE]:
                 for word in line:
                     word.value = spell_fixer.spelling_fixer(word.value)
 
@@ -245,4 +246,4 @@ def process_doc(file_name, margins):
         section.left_margin = Inches(0.2)
         section.right_margin = Inches(0.2)
 
-    document.save(file_name.split(".")[0] + ".docx")
+    document.save(output_path)
