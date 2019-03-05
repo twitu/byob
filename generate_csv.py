@@ -7,6 +7,8 @@ from itertools import groupby
 import spell_fixer
 import sys
 from text_objects import Rectangle, Word, Line, LineType, Column
+from text_objects import get_lines, get_columns
+from text_objects import centre_aligned, merge_words
 
 triage_data = {
     "interest Receivable and similar income":"Interest Receivable",
@@ -49,94 +51,6 @@ triage_data = {
     "profit for the financial period before members' remuneration and profit shares available for discretionary division among members ":"Profit for the financial year",
     "profit after taxation being profit for the financial year":"Profit for the financial year"
 }
-
-# group words that are horizontally in the same line
-def get_lines(page_element, margin=5):
-    lines = []
-    page_box = Rectangle(
-        list(map(float, page_element.attrib["bbox"].split(","))))
-    for text_box in page_element.getchildren():
-        if not text_box.tag == "textbox":
-            continue
-        for text_line in text_box.getchildren():
-            if not text_line.tag == "textline":
-                continue
-            bbox = Rectangle(
-                list(map(float, text_line.attrib["bbox"].split(","))))
-            value = ''.join(
-                [text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
-            value = value.strip()
-            if value[0] == '(' or value[-1] == ')':
-                value.rstrip(')')
-                value.lstrip('(')
-                value = "-" + value
-            if not spell_fixer.spelling_accept(value):
-                continue
-            value = spell_fixer.spelling_fixer(value)
-            word = Word(value, bbox)
-            added = False
-            for line in lines:
-                # check within a margin of error if the text_line can be added in an exisiting line
-                if (line.box.y1 - margin < bbox.y1 < line.box.y1 + margin) and (line.box.y2 - margin < bbox.y2 < line.box.y2 + margin):
-                    line.add_word(word)
-                    added = True
-
-            if not added:
-                lines.append(Line(word))
-
-    return lines
-
-
-# take lines of words and create columns from them
-def get_columns(lines, margin=20):
-    columns = []
-    for line in lines:
-        for word in line:
-            added = False
-            for column in columns:
-                if column.box.x1 - margin < word.box.x1 < column.box.x1 + margin \
-                        or column.box.x2 - margin < word.box.x2 < column.box.x2 + margin \
-                        or column.box.x1 + margin < word.box.x1 and word.box.x2 < column.box.x2:
-                    column.words.append(word)
-                    added = True
-            if not added:
-                columns.append(Column(word))
-    return columns
-
-
-# merge closely spaced words
-def merge_words(lines, margin=15):
-    new_lines = []
-    for i, line in enumerate(lines):
-        line.words.sort()
-        merger = line.words[0]
-        new_line = Line(merger)
-        for i, word in enumerate(line.words[1:]):
-            if merger.box.x2 + margin > word.box.x1:
-                merger.merge(word)
-            else:
-                new_line.add_word(merger)
-                merger = word
-        # avoid adding starting word again
-        # happens when line has only one word
-        if merger != new_line.words[0]:
-            new_line.add_word(merger)
-        new_lines.append(new_line)
-    return new_lines
-
-
-def centre_aligned(line, page_box, margin=15, cutoff=0.8):
-    mid = (page_box.x1 + page_box.x2)/2
-    width = page_box.x2 - page_box.x1
-
-    if line.box.x1 < mid < line.box.x2:
-        left = mid - line.box.x1
-        right = line.box.x2 - mid
-        if (-margin < left - right < margin) and ((line.box.x2 - line.box.x1)/width < cutoff):
-            return True
-
-    return False
-
 
 # function to check for table headings
 # table headings takes json file with example headings to compare
