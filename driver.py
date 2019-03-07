@@ -105,7 +105,7 @@ lbl = Label(window, text = 'File / directory path:')
 pathName2 = Button(window, text = "Load directory", command = com)
 pathName2.grid(column = 0, row = 0, pady = 10, padx = 10)
 
-pathName = Button(window, text = 'Load File')
+pathName = Button(window, text = 'Load File', command = com2)
 pathName.grid(column = 1, row = 0, pady = 10, padx = 10)
 
 rd1 = Radiobutton(window, text="Default", variable = rdb_var, value = 'standard', padx = 10, pady = 5)
