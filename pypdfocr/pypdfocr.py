@@ -30,9 +30,6 @@ from PIL import Image
 from pypdfocr.pypdfocr_pdf import PyPdf
 from pypdfocr.pypdfocr_tesseract import PyTesseract
 from pypdfocr.pypdfocr_gs import PyGs
-from pypdfocr.pypdfocr_watcher import PyPdfWatcher
-from pypdfocr.pypdfocr_pdffiler import PyPdfFiler
-from pypdfocr.pypdfocr_filer_dirs import PyFilerDirs
 from pypdfocr.pypdfocr_preprocess import PyPreprocess
 
 
