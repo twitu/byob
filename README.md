@@ -1,60 +1,36 @@
-# Profit and Loss Statement Processing
+# Convert PDF to DOC and CSV
+
+The application can convert scanned pdfs to docs and can extract table data to store in the form of a csv. The application is tuned to work on a specific structure of pdfs (similar to finanical entries)
 
 ## Installation
 
-Please use virtualenv to setup the environment for running the scripts. The ocr and the parsing scripts require two different virtual environments
-
+Supports installation using docker
 ```
-virtualenv -p python2 byob_ocr
-source ./byob_ocr/bin/activate
-pip install -r requirements_ocr.txt
-deactivate
+git pull https://github.com/twitu/byob
+cd byob
+docker build -t byob-app .
 ```
 
+It can also be built from source  
+(Note: instructions are for bash only)
 ```
-virtualenv -p python3 byob_parser
-source ./byob_parser/bin/activate
-pip install -r requirements_parser.txt
-deactivate
+git pull https://github.com/twitu/byob
+cd byob
+virtualenv -p python3 byob_env
+. byob_env/bin/activate
+sudo apt-get install -y tesseract-ocr python3-tk
+python3 -m pip install -r requirements.txt
 ```
-
 ## Usage:
 
-With the `byob_ocr` environment activated
+With the `byob_env` environment activated
 ```shell
-python ocr/driver_ocr.py <file_name>
+python3 driver.py
 ```
-where file_name is the path to the file or the directory. This will convert the pdf to text searchable pdf
-
-With the `byob_parser` environment activated, you can run the script with the following options,
-1. To extract documents (docx) from a single pdf, run
+With docker use
 ```shell
-python parser/driver.py <file_name>
+docker run --rm -v /tmp/.X11-unix:/tmp/.X11-unix byob-app:latest
 ```
-
-2. To extract documents (docx) from all files in a directory, run
-```shell
-python parser/driver.py <dir_path>
-```
-
-3. To extract documents (docx) with densely spaced text, run
-```shell
-python parser/driver.py <dir_path> -m=dense
-```
-
-4. To extract documents (docx) with sparsely spaced text, run
-```shell
-python parser/driver.py <dir_path> -m=sparse
-```
-
-5. To extract csv of a P&L sheet, run
-```shell
-python parser/driver.py <dir_path> -c
-```
-
-
-**Note:** The -m option allows to improve accuracy based on the type of document which has to be processed
-
 
 ## License:
 GNU GPLv3 open source license
