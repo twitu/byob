@@ -36,7 +36,7 @@ parsing_modes = {
 def generateCSV():
     if os.path.exists(pathName.get()) and os.path.isdir(pathName.get()):
         working_dir = pathName.get()
-        files = list(filter(lambda x: x.endswith(".pdf", os.listdir(working_dir))))
+        files = list(filter(lambda x: x.endswith(".pdf"), os.listdir(working_dir)))
     elif os.path.exists(pathName.get()) and os.path.isfile(pathName.get()):
         working_dir = os.path.dirname(pathName.get())
         files = [os.path.basename(pathName.get())]
@@ -58,7 +58,7 @@ def generateCSV():
 def generateDoc():
     if os.path.exists(pathName.get()) and os.path.isdir(pathName.get()):
         working_dir = pathName.get()
-        files = list(filter(lambda x: x.endswith(".pdf", os.listdir(working_dir))))
+        files = list(filter(lambda x: x.endswith(".pdf"), os.listdir(working_dir)))
     elif os.path.exists(pathName.get()) and os.path.isfile(pathName.get()):
         working_dir = os.path.dirname(pathName.get())
         files = [os.path.basename(pathName.get())]
