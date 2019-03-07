@@ -1,0 +1,55 @@
+<link rel="stylesheet" href="css/materialize.css">
+<form id="byob-form" method="POST" action="#" text-align="center">
+    <div class="file-field input-field">
+      <div class="btn">
+        <span>File</span>
+        <input type="file">
+      </div>
+      <div class="file-path-wrapper">
+        <input class="file-path validate" type="text" placeholder="Select one or more files">
+      </div>
+    </div>
+        <label>
+          <input name="group1" type="radio" checked />
+          <span>Category 1</span>
+        </label>
+        <label>
+          <input name="group1" type="radio" />
+          <span>Category 2</span>
+        </label>
+        <label>
+          <input name="group1" type="radio"  />
+          <span>Category 3</span>
+        </label>
+        <br><br>
+        <button type="button" id="gen-docx-submit" class="btn">Generate Docx</button>
+        <button type="button" id="gen-csv-submit" class="btn">Generate CSV</button>
+        
+    </form>
+    
+    <script src="js/materialize.js"></script>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script>
+    // let url = 'http://127.0.0.1:5000/';
+
+    // window.setInterval( () => {
+    //     // add function call here
+    // }, 4000)
+
+    let x = "fi";
+    $('input[type="file"]').change(function(e){
+        var fileName = e.target.files[0].name;
+        console.log(x);
+        alert('The file "' + fileName +  '" has been selected.');
+    });
+    $('#gen-docx-submit').click(e => {
+        var formData = $("#byob-form").serializeArray();
+        alert("Hi");
+        console.log(formData);
+        var postData = {};
+        for (var i = 0; i < formData.length; i++) {
+            postData[formData[i]["name"]] = formData[i].value;
+        }
+    });
+
+</script>
