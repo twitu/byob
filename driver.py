@@ -1,3 +1,5 @@
+from tkinter import *
+from tkinter import filedialog
 import argparse
 import sys
 import os
@@ -6,6 +8,8 @@ from os.path import join
 from generate_readables import generate_readables
 from generate_csv import process_csv
 from generate_doc import process_doc
+
+x = ''
 
 parsing_modes = {
     'sparse': {
@@ -31,60 +35,92 @@ parsing_modes = {
     }
 }
 
-
-def make_argument_parser():
-    parser = argparse.ArgumentParser(description="Convert PDF to docs or profit and loss statements to CSV")
-    parser.add_argument("-m", "--mode", help="set parsing mode, default value is standard", required=False, default="standard")
-    path = parser.add_mutually_exclusive_group(required=True)
-    path.add_argument("-f", "--file", help="convert given pdf")
-    path.add_argument("-d", "--dir", help="convert all pdfs in given directory path")
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--csv", help="store profit and loss table in csv", action="store_true")
-    action.add_argument("--doc", help="convert file to doc", action="store_true")
-    return parser
+def set_status(text): # Bhanuka, use this function
+    T.insert(END, text)
+    T.set(END)
 
 
-if __name__ == '__main__':
-    args = make_argument_parser().parse_args()
-    if args.mode not in parsing_modes:
-        print("The entered mode is invalid. Possible modes are:")
-        for mode_names in parsing_modes:
-            print(" -", mode_names)
-        exit()
-    
-    # either one of directory or file must be given
-    if args.dir:
-        if os.path.exists(args.dir) and os.path.isdir(args.dir):
-            working_dir = args.dir
-            # get all pdf files from given directory
-            files = list(filter(lambda x: x.endswith(".pdf", os.listdir(working_dir))))
-        else:
-            print("given directory path is not valid")
-            exit()
+def generateCSV():
+    if os.path.exists(pathName.get()) and os.path.isdir(pathName.get()):
+        working_dir = pathName.get()
+        files = list(filter(lambda x: x.endswith(".pdf"), os.listdir(working_dir)))
+    elif os.path.exists(pathName.get()) and os.path.isfile(pathName.get()):
+        working_dir = os.path.dirname(pathName.get())
+        files = [os.path.basename(pathName.get())]
     else:
-        if os.path.exists(args.file) and os.path.isfile(args.file):
-            working_dir = os.path.dirname(args.file)
-            files = [os.path.basename(args.file)]
-        else:
-            print("given file path is not valid")
-            exit()
-
-    # generate readable pdf ocr files and tehen convert them to parsable xml files
+        T.insert(END,"Status: Entered file / directory path is not valid")
+        return
     generate_readables(working_dir, files)
 
-    # either convert to doc or to csv
     for file_name in files:
         name = file_name.split(".")[0]
-        if args.csv:
-            print("generating csv from {}".format(file_name))
-            process_csv(
-                join(working_dir, "xml", name + ".xml"),
-                join(working_dir, "csv", name + ".csv")
-            )
-        else:
-            print("converting {} to doc".format(file_name))
-            process_doc(
-                join(working_dir, "xml", name + ".xml"),
-                join(working_dir, "doc", name + ".doc"),
-                parsing_modes[args.mode]
-            )
+        process_csv(
+            join(working_dir, "xml", name + ".xml"),
+            join(working_dir, "csv", name + ".csv")
+        )
+        T.insert(END,"Status: All files converted successfully")
+
+
+def generateDoc():
+    if os.path.exists(pathName.get()) and os.path.isdir(pathName.get()):
+        working_dir = pathName.get()
+        files = list(filter(lambda x: x.endswith(".pdf"), os.listdir(working_dir)))
+    elif os.path.exists(pathName.get()) and os.path.isfile(pathName.get()):
+        working_dir = os.path.dirname(pathName.get())
+        files = [os.path.basename(pathName.get())]
+    else:
+        T.insert(END,"Status: Entered file / directory path is not valid")
+        return
+    generate_readables(working_dir, files)
+    for file_name in files:
+        name = file_name.split(".")[0]
+        process_doc(
+            join(working_dir, "xml", name + ".xml"),
+            join(working_dir, "doc", name + ".doc"),
+            parsing_modes[args.mode]
+        )
+    T.insert(END,"Status: All files converted successfully")
+
+
+def com():
+    global x
+    x = filedialog.askdirectory()
+
+def com2():
+    global x
+    x = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
+
+
+window = Tk()
+rdb_var = StringVar()
+rdb_var.set(1)
+
+window.title("Balance Sheet Manager")
+window.geometry('400x400')
+
+lbl = Label(window, text = 'File / directory path:')
+pathName2 = Button(window, text = "Load directory", command = com)
+pathName2.grid(column = 0, row = 0, pady = 10, padx = 10)
+
+pathName = Button(window, text = 'Load File')
+pathName.grid(column = 1, row = 0, pady = 10, padx = 10)
+
+rd1 = Radiobutton(window, text="Default", variable = rdb_var, value = 'standard', padx = 10, pady = 5)
+rd2 = Radiobutton(window, text="Sparse", variable = rdb_var, value  = 'sparse', padx = 10, pady = 5)
+rd3 = Radiobutton(window, text="Dense", variable = rdb_var, value = 'dense', padx = 10, pady = 5)
+lbl2 = Label(window, text = '')
+
+rd1.grid(column = 0, row = 1)
+rd2.grid(column = 0, row = 2)
+rd3.grid(column = 0, row = 3)
+lbl2.grid(column = 0, row = 4)
+
+btn = Button(window, text = "Generate Docx", command = generateDoc, padx = 10, pady = 5)
+btn2 = Button(window, text = "Generate CSV", command = generateCSV, padx = 10, pady = 5)
+
+btn.grid(column = 0, row = 5)
+btn2.grid(column = 1, row = 5)
+T = Text(window, height = 10, width = 50)
+T.grid(row = 6, pady = 10, padx = 10, columnspan = 3)
+
+window.mainloop()
