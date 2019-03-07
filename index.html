@@ -3,7 +3,7 @@
     <div class="file-field input-field">
       <div class="btn">
         <span>File</span>
-        <input type="file">
+        <input type="file" id="imgInp">
       </div>
       <div class="file-path-wrapper">
         <input class="file-path validate" type="text" placeholder="Select one or more files">
@@ -50,6 +50,23 @@
         for (var i = 0; i < formData.length; i++) {
             postData[formData[i]["name"]] = formData[i].value;
         }
+    });
+
+    function readURL(input) {
+    if (input.files && input.files[0]) {
+      console.log(input.files);
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        console.log(e.target.result)
+      }
+
+      reader.readAsDataURL(input.files[0]);
+    }
+    }
+
+    $("#imgInp").change(function() {
+    readURL(this);
     });
 
 </script>
