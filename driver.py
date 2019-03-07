@@ -9,6 +9,9 @@ from generate_readables import generate_readables
 from generate_csv import process_csv
 from generate_doc import process_doc
 
+
+# Horrible code starts here
+
 x = ''
 
 parsing_modes = {
@@ -124,3 +127,5 @@ T = Text(window, height = 10, width = 50)
 T.grid(row = 6, pady = 10, padx = 10, columnspan = 3)
 
 window.mainloop()
+
+# Horrible code ends here
