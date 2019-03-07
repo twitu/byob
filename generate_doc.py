@@ -153,5 +153,10 @@ def process_doc(input_path, output_path, margins):
     document.save(output_path)
 
 if __name__ == "__main__":
-    process_doc("./dataset/dataset_1_3/xml/02639074_ocr.xml", "./dataset/dataset_1_3/doc/02639074_ocr.doc",
-    {"l_margin":20, "m_margin":20})
+    # first argument path of xml file
+    # second argument path of output file
+    # third argument parsing mode
+    process_doc(sys.argv[1], sys.argv[2], {
+        "l_margin": 20,
+        "m_margin": 20,
+    })

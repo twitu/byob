@@ -163,3 +163,8 @@ def process_csv(input_path, output_path):
                         csv_line[word.col_num] = word.value
                     print(csv_line)
                     csvwriter.writerow(csv_line)
+
+if __name__ == "__main__":
+    # first argument should be path of xml
+    # second argument should be path of output file
+    process_csv(sys.argv[1], sys.argv[2])
