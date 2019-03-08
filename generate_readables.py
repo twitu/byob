@@ -3,7 +3,7 @@ import os
 from os.path import join
 from pypdfocr.pypdfocr import PyPDFOCR
 
-def generate_readables(working_dir, files, custom_print):
+def generate_readables(working_dir, files, print):
     '''
     convert all pdfs in dir_path in 3 formats,
     1. text readable pdfs, stored in ocr/
@@ -20,7 +20,7 @@ def generate_readables(working_dir, files, custom_print):
 
     # generate readable pdf using ocr library
     if not os.path.isdir(ocr_dir):
-        custom_print("creating ocr directory")
+        print("creating ocr directory")
         os.mkdir(ocr_dir)
     
     for file_name in files:
@@ -29,16 +29,16 @@ def generate_readables(working_dir, files, custom_print):
 
         # do not convert if file of the same name is already converted
         if output_file not in os.listdir(ocr_dir):
-            custom_print("converting {} to ocr pdf".format(file_name))
+            print("converting {} to ocr pdf".format(file_name))
             file_path = join(working_dir, file_name)
             converter.go(file_path)
             os.rename(join(working_dir, output_file), output_path)
         else:
-            custom_print("ocr version for {} exists".format(file_name))
+            print("ocr version for {} exists".format(file_name))
 
     # generate parsable xml files from ocr pdf
     if not os.path.isdir(xml_dir):
-        custom_print("creating xml directory")
+        print("creating xml directory")
         os.mkdir(xml_dir)
 
     for file_name in files:
@@ -48,15 +48,15 @@ def generate_readables(working_dir, files, custom_print):
 
         # do not convert if file of the same name is already converted
         if output_file not in os.listdir(xml_dir):
-            custom_print("converting {} to xml file".format(file_name))
+            print("converting {} to xml file".format(file_name))
             os.system('pdf2txt.py -t xml ' + input_path + ' > ' + output_path)
         else:
-            custom_print("xml version for {} exists".format(file_name))
+            print("xml version for {} exists".format(file_name))
     
     # create directories for doc and xml
     if not os.path.isdir(doc_dir):
-        custom_print("creating doc directory")
+        print("creating doc directory")
         os.mkdir(doc_dir)
     if not os.path.isdir(xml_dir):
-        custom_print("creating xml directory")
+        print("creating xml directory")
         os.mkdir(xml_dir)
