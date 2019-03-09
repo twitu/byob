@@ -7,11 +7,11 @@ import sys
 from docx import Document
 from text_objects import Rectangle, Word, Line, LineType, Column
 from text_objects import get_lines, get_columns
-from text_objects import centre_aligned, merge_words
+from text_objects import centre_aligned, merge_words, check_fix_spellings
 
 triage_data = {
-    "interest Receivable and similar income":"Interest Receivable",
-    "other interest Receivable and similar income":"Interest Receivable",
+    "interest receivable and similar income":"Interest Receivable",
+    "other interest receivable and similar income":"Interest Receivable",
     "interest payable and similar expenses":"Interest payable and similar charges",
     "interest payable and expenses":"Interest payable and similar charges",
     "profit before taxation":"Profit on ordinary activities before taxation",
@@ -33,10 +33,10 @@ triage_data = {
     "loss for the financial year":"Profit for the financial year", 
     "loss for the financial year after":"Profit for the financial year",    
     "other charges":"Interest payable and similar charges",
-    "profit or (loss) for Period":"Profit for the financial year",
+    "profit or (loss) for period":"Profit for the financial year",
     "operating loss":"Operating Profit",
-    "gross profit or (Loss)":"Gross Profit",
-    "operating profit or (Loss)": "Operating Profit",
+    "gross profit or (loss)":"Gross Profit",
+    "operating profit or (loss)": "Operating Profit",
     "profit or (loss) before tax":"Profit on ordinary activities before taxation",
     "gross profit/(loss)":"Gross Profit",
     "profit/(loss)":"Profit for the financial year",
@@ -123,6 +123,9 @@ def process_csv(input_path, output_path):
         # filter and mark names with appropriate types
         filter_and_mark(lines, page_box, page_width)
 
+        # correct spellings and discard empty lines
+        lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
+
         # check if page contains table for profit and loss by checking header
         if spell_fixer.p_l_filter(lines):
 
@@ -167,4 +170,4 @@ def process_csv(input_path, output_path):
 if __name__ == "__main__":
     # first argument should be path of xml
     # second argument should be path of output file
-    process_csv(sys.argv[1], sys.argv[2])
+    process_csv("/home/twitu/Code/byob/dataset/dataset_1_3/xml/04614523.xml", "/home/twitu/Code/byob/dataset/dataset_1_3/csv/04614523.csv")
