@@ -18,10 +18,12 @@ git pull https://github.com/twitu/byob
 cd byob
 virtualenv -p python3 byob_env
 . byob_env/bin/activate
-sudo apt-get install -y tesseract-ocr python3-tk
+sudo apt-get install -y tesseract-ocr
 python3 -m pip install -r requirements.txt
 ```
 ## Usage:
+
+Note: use the [documentation](https://docs.docker.com/storage/volumes/) to mount the files/directory you want to convert
 
 With the `byob_env` environment activated
 ```shell
@@ -29,8 +31,10 @@ python3 driver.py
 ```
 With docker use
 ```shell
-docker run --rm -v /tmp/.X11-unix:/tmp/.X11-unix byob-app:latest
+docker run --rm -v /tmp/.X11-unix:/tmp/.X11-unix byob-app:latest <arguments>
 ```
+
+Use `-h` argument to get instructions for help
 
 ## License:
 GNU GPLv3 open source license

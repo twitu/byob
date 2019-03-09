@@ -73,7 +73,7 @@ def gen_filter(line, match_lines):
         for word in match_line:
             flag = False
             for words in line:
-                if word in words.value:
+                if word.lower() in words.value.lower():
                     flag = True
             
             if not flag:

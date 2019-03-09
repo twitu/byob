@@ -166,8 +166,7 @@ def get_lines(page_element, margin=5):
         for text_line in text_box.getchildren():
             if not text_line.tag == "textline":
                 continue
-            bbox = Rectangle(
-                list(map(float, text_line.attrib["bbox"].split(","))))
+            bbox = Rectangle(list(map(float, text_line.attrib["bbox"].split(","))))
             value = ''.join(
                 [text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
             value = value.strip()
@@ -175,9 +174,6 @@ def get_lines(page_element, margin=5):
                 value.rstrip(')')
                 value.lstrip('(')
                 value = "-" + value
-            if not spell_fixer.spelling_accept(value):
-                continue
-            value = spell_fixer.spelling_fixer(value)
             word = Word(value, bbox)
             added = False
             for line in lines:
@@ -190,6 +186,24 @@ def get_lines(page_element, margin=5):
                 lines.append(Line(word))
 
     return lines
+
+# filter words and remake lines
+def check_fix_spellings(lines, types):
+    new_lines = []
+    for line in lines:
+        if line.type not in types:
+            continue
+        new_line = Line()
+        new_line.row_num = line.row_num
+        new_line.type = line.type
+        for word in line:
+            if spell_fixer.spelling_accept(word.value):
+                new_line.add_word(Word(spell_fixer.spelling_fixer(word.value), word.box))
+        # if new line contains words after filtering add it to list
+        if new_line.words:
+            new_lines.append(new_line)
+    
+    return new_lines
 
 
 # take lines of words and create columns from them

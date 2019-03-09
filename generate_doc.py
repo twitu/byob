@@ -11,7 +11,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.shared import Pt, Inches
 from text_objects import Rectangle, Word, Line, LineType, Column
 from text_objects import get_lines, get_columns, get_paragraphs
-from text_objects import centre_aligned, merge_words
+from text_objects import centre_aligned, merge_words, check_fix_spellings
 
 
 # print centre aligned text as bold and centred in doc
@@ -112,6 +112,9 @@ def process_doc(input_path, output_path, margins):
 
         # filter and mark names with appropriate types
         filter_and_mark(lines, page_box, page_width)
+
+        # correct spellings and discard empty lines
+        lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
 
         # correct spellings and segmentation for paragraph and table lines
         for line in lines:
