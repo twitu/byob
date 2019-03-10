@@ -13,26 +13,13 @@ from functools import partial
 
 # list of parsing modes
 parsing_modes = {
-    'sparse': {
-        'r_margin': 20,
-        'c_margin': 10,
-        'l_margin': 20,
-        'm_margin': 20,
-        'p_margin': 20
-    },
-    'dense': {
-        'r_margin': 20,
-        'c_margin': 10,
-        'l_margin': 20,
-        'm_margin': 10,
-        'p_margin': 20
-    },
     'standard':{
-        'r_margin': 20,
-        'c_margin': 10,
-        'l_margin': 20,
-        'm_margin': 15,
-        'p_margin': 20
+        'line_margin': 10,
+        'merge_margin': 15,
+        'adj_margin': 15,
+        'large_cutoff': 0.6,
+        'para_margin': 20,
+        'column_margin':20
     }
 }
 
@@ -84,13 +71,14 @@ if __name__ == "__main__":
             process_doc(
                 join(working_dir, "xml", name + ".xml"),
                 join(working_dir, "doc", name + ".doc"),
-                parsing_modes[rdb_var.get()],
+                parsing_modes[args.mode],
             )
         else:
             print("converting {} to csv".format(name))
             process_csv(
                 join(working_dir, "xml", name + ".xml"),
-                join(working_dir, "csv", name + ".csv")
+                join(working_dir, "csv", name + ".csv"),
+                parsing_modes[args.mode],
             )
     
     print("All files converted successfully")

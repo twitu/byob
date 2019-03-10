@@ -48,7 +48,7 @@ class Word:
 
     # sort from left to right
     def __gt__(self, value):
-        return self.box.x1 > self.box.x2
+        return self.box.x1 > value.box.x1
 
     # concatenate text and merge box
     def merge(self, other):
@@ -192,6 +192,7 @@ def check_fix_spellings(lines, types):
     new_lines = []
     for line in lines:
         if line.type not in types:
+            new_lines.append(line)
             continue
         new_line = Line()
         new_line.row_num = line.row_num

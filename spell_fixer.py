@@ -19,6 +19,8 @@ UNIMPORTANT_SINGLES = [
 ]
 
 PL_LINES = [
+    # add corrections for words
+    ["PRONT", "LOSS", "ACCOUNT"],
     ['PROFIT', 'LOSS', 'ACCOUNT'],
     ['STATEMENT', 'COMPREHENSIVE', 'INCOME'],
     ['ABRIDGED', 'PROFIT', 'LOSS', 'ACCOUNT'],
