@@ -68,7 +68,7 @@ def detect_heading(lines, file):
     return flag
 
 
-def filter_and_mark(lines, page_box, page_width):
+def filter_and_mark(lines, page_box, page_width, margin=20, cutoff=0.6):
 
     # get lines with multiple unmerged words
     # these have high chance of forming tables
@@ -83,7 +83,7 @@ def filter_and_mark(lines, page_box, page_width):
 
     # filter large lines that are likely to be part of paragraphs
     for line in lines:
-        if line.type == -1 and (line.box.x2 - line.box.x1)/page_width > 0.6:
+        if line.type == -1 and (line.box.x2 - line.box.x1)/page_width > cutoff:
             line.type = LineType.PARA
 
     # get small lines adjacent to table lines even if they have one word
@@ -91,7 +91,6 @@ def filter_and_mark(lines, page_box, page_width):
     # add rest of small lines to paragraph lines
     for i, line in enumerate(lines):
         to_add = False
-        margin = 20
 
         # first check lower line and assign same type
         if i < len(lines) - 1 and \
@@ -109,19 +108,19 @@ def filter_and_mark(lines, page_box, page_width):
             line.type = LineType.TABLE
 
 
-def process_csv(input_path, output_path):
+def process_csv(input_path, output_path, parse_mode):
 
     xml_file = tree.parse(input_path).getroot()
     for page in xml_file.getchildren():
         page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
         page_mid = (page_box.x1 + page_box.x2)/2
         page_width = page_box.x2 - page_box.x1
-        lines = get_lines(page)
-        lines = merge_words(lines)
+        lines = get_lines(page, parse_mode["line_margin"])
+        lines = merge_words(lines, parse_mode["merge_margin"])
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box, page_width)
+        filter_and_mark(lines, page_box, page_width, parse_mode["adj_margin"], parse_mode["large_cutoff"])
 
         # correct spellings and discard empty lines
         lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
@@ -136,7 +135,7 @@ def process_csv(input_path, output_path):
                     table_lines.append(line)
 
             # write to csv
-            columns = get_columns(table_lines)
+            columns = get_columns(table_lines, parse_mode["column_margin"])
             columns.sort()
             for i, column in enumerate(columns):
                 for word in column.words:
@@ -164,10 +163,4 @@ def process_csv(input_path, output_path):
                     csv_line = [None]*(max_col)
                     for word in line.words:
                         csv_line[word.col_num] = word.value
-                    print(csv_line)
                     csvwriter.writerow(csv_line)
-
-if __name__ == "__main__":
-    # first argument should be path of xml
-    # second argument should be path of output file
-    process_csv("/home/twitu/Code/byob/dataset/dataset_1_3/xml/04614523.xml", "/home/twitu/Code/byob/dataset/dataset_1_3/csv/04614523.csv")

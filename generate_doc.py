@@ -24,9 +24,9 @@ def print_centre_text(lines, document):
 
 
 # print paragraph
-def print_paragraph_text(lines, document, page_box, cutoff=0.6):
+def print_paragraph_text(lines, document, page_box, cutoff=0.6, para_margin=20):
 
-    paras = get_paragraphs(lines)
+    paras = get_paragraphs(lines, para_margin)
 
     for para_lines in paras:
         first_line = para_lines[0]
@@ -59,7 +59,7 @@ def print_table_text(lines, document, max_col):
             row.cells[word.col_num].text = word.value
 
 
-def filter_and_mark(lines, page_box, page_width):
+def filter_and_mark(lines, page_box, page_width, margin=15, cutoff=0.6):
 
     # get lines with multiple unmerged words
     # these have high chance of forming tables
@@ -74,14 +74,13 @@ def filter_and_mark(lines, page_box, page_width):
 
     # filter large lines that are likely to be part of paragraphs
     for line in lines:
-        if (line.box.x2 - line.box.x1)/page_width > 0.6 and line.type == -1:
+        if line.type == -1 and (line.box.x2 - line.box.x1)/page_width > cutoff:
             line.type = LineType.PARA
 
     # get small lines adjacent to table lines even if they have one word
     # these can be empty entries in the table or headings of entries
     # add rest of small lines to paragraph lines
     for i, line in enumerate(lines):
-        margin = 15
 
         # first check lower line and assign same type
         if i < len(lines) - 1 and \
@@ -99,19 +98,19 @@ def filter_and_mark(lines, page_box, page_width):
             line.type = LineType.PARA
 
 
-def process_doc(input_path, output_path, margins):
+def process_doc(input_path, output_path, parse_mode):
     document = Document()
     xml_file = tree.parse(input_path).getroot()
     for page in xml_file.getchildren():
         page_box = Rectangle(list(map(float, page.attrib["bbox"].split(","))))
         page_mid = (page_box.x1 + page_box.x2)/2
         page_width = page_box.x2 - page_box.x1
-        lines = get_lines(page, margins['l_margin'])
-        lines = merge_words(lines, margins['m_margin'])
+        lines = get_lines(page, parse_mode['line_margin'])
+        lines = merge_words(lines, parse_mode['merge_margin'])
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box, page_width)
+        filter_and_mark(lines, page_box, page_width, parse_mode["adj_margin"], parse_mode["large_cutoff"])
 
         # correct spellings and discard empty lines
         lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
@@ -128,7 +127,7 @@ def process_doc(input_path, output_path, margins):
             if k == LineType.CENTRE:
                 print_centre_text(line_group, document)
             elif k == LineType.PARA:
-                print_paragraph_text(line_group, document, page_box)
+                print_paragraph_text(line_group, document, page_box, parse_mode["large_cutoff"], parse_mode["para_margin"])
             elif k == LineType.TABLE:
                 columns = get_columns(line_group)
                 columns.sort()
@@ -139,7 +138,7 @@ def process_doc(input_path, output_path, margins):
 
                 # don't make tables for single columns
                 if max_col < 2:
-                    print_paragraph_text(line_group, document, page_box)
+                    print_paragraph_text(line_group, document, parse_mode["large_cutoff"], parse_mode["para_margin"])
                 else:
                     print_table_text(line_group, document, max_col)
 
@@ -154,12 +153,3 @@ def process_doc(input_path, output_path, margins):
         section.right_margin = Inches(0.2)
 
     document.save(output_path)
-
-if __name__ == "__main__":
-    # first argument path of xml file
-    # second argument path of output file
-    # third argument parsing mode
-    process_doc(sys.argv[1], sys.argv[2], {
-        "l_margin": 20,
-        "m_margin": 20,
-    })
