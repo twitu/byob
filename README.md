@@ -27,11 +27,11 @@ Note: use the [documentation](https://docs.docker.com/storage/volumes/) to mount
 
 With the `byob_env` environment activated
 ```shell
-python3 driver.py
+python3 driver.py <arguments>
 ```
 With docker use
 ```shell
-docker run --rm -v /tmp/.X11-unix:/tmp/.X11-unix byob-app:latest <arguments>
+docker run --rm byob-app:latest <arguments>
 ```
 
 Use `-h` argument to get instructions for help

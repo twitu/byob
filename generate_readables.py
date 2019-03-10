@@ -23,7 +23,7 @@ def generate_readables(working_dir, files, print):
         print("creating ocr directory")
         os.mkdir(ocr_dir)
     
-    for file_name in files:
+    for i, file_name in enumerate(files):
         output_file = file_name.split(".")[0] + "_ocr.pdf"
         output_path = join(ocr_dir, output_file)
 
@@ -31,7 +31,12 @@ def generate_readables(working_dir, files, print):
         if output_file not in os.listdir(ocr_dir):
             print("converting {} to ocr pdf".format(file_name))
             file_path = join(working_dir, file_name)
-            converter.go(file_path)
+            # print error message and ignore file if cannot convert ocr
+            try:
+                converter.go(file_path)
+            except:
+                print("Could not convert {} due to ocr pdf".format(file_name))
+                del files[i]
             os.rename(join(working_dir, output_file), output_path)
         else:
             print("ocr version for {} exists".format(file_name))

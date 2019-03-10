@@ -12,6 +12,12 @@ from functools import partial
 
 
 # list of parsing modes
+# line margin vertical margin for getting lines
+# merge margin horizontal margin for clubbing words
+# adj margin for vertical distance between lines for marking
+# large cutoff ratio of line with page to call as para
+# para margin to club lines into paragraphs
+# column margin horizontal margin between columns
 parsing_modes = {
     'standard':{
         'line_margin': 10,
