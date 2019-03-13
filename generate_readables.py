@@ -3,7 +3,7 @@ import os
 from os.path import join
 from pypdfocr.pypdfocr import PyPDFOCR
 
-def generate_readables(working_dir, files, print):
+def generate_readables(working_dir, files):
     '''
     convert all pdfs in dir_path in 3 formats,
     1. text readable pdfs, stored in ocr/

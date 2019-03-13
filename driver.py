@@ -67,7 +67,7 @@ if __name__ == "__main__":
         print(file)
 
     # generate readable files from pdfs i.e. ocr pdf and xml
-    generate_readables(working_dir, files, print)
+    generate_readables(working_dir, files)
 
     # call function to generate csv or doc
     for file_name in files:
