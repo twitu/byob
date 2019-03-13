@@ -34,7 +34,11 @@ With docker use
 docker run --rm byob-app:latest <arguments>
 ```
 
-Use `-h` argument to get instructions for help
+## Arguments
+Use `-h` argument to get instructions for help  
+Use `-f | --path` to give path of file or directory  
+Use `--csv | --doc` to specify if you want to convert file to csv or doc  
+Use `-m | --mode` to select parsing mode (it is optional and default mode is standard)  
 
 ## License:
 GNU GPLv3 open source license
