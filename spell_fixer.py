@@ -3,6 +3,7 @@ import wordsegment
 import re
 
 from text_objects import Line, Word, Rectangle, LineType
+import spell_correct
 
 # load data for word segementation
 wordsegment.load()
@@ -49,8 +50,19 @@ def spelling_fixer(word):
     Takes a string and returns its spell corrected value
 
     '''
-    return " ".join(wordsegment.segment(word))
-
+    words = word.split(' ')
+    fixed_words = []
+    for word in words:
+        print(word + "***")
+        if not word.isdigit():
+            seg_words = wordsegment.segment(word)
+        else:
+            seg_words = [word]
+        print(word + "***")
+        for seg_index in range(len(seg_words)):
+            seg_words[seg_index] = spell_correct.correction(seg_words[seg_index])
+        fixed_words += seg_words
+    return " ".join(fixed_words)
 
 
 def spelling_accept(word):
