@@ -48,21 +48,39 @@ FOOTERS = [
 def spelling_fixer(word):
     '''
     Takes a string and returns its spell corrected value
-
     '''
+    print(" ".join(word))
+    num_fix_words = []
     words = word.split(' ')
-    fixed_words = []
     for word in words:
-        print(word + "***")
+        num_fix_words += num_check(word)
+    fixed_words = []
+    
+    for word in num_fix_words:
         if not word.isdigit():
             seg_words = wordsegment.segment(word)
         else:
             seg_words = [word]
-        print(word + "***")
         for seg_index in range(len(seg_words)):
             seg_words[seg_index] = spell_correct.correction(seg_words[seg_index])
         fixed_words += seg_words
+    print("***", " ".join(fixed_words))
     return " ".join(fixed_words)
+
+
+def num_check(word):
+    '''
+    Takes a string and separates possible joined number and word
+    Returns a string of list
+    Example:
+        31january is converted to [31, january]
+        ended31 is converted to [ended, 31]
+    '''
+    head = word.rstrip('0123456789')
+    tail = word[len(head):]
+    head_ka_head = head.lstrip('0123456789')
+    head = head[: len(head) - len(head_ka_head)]
+    return [head_ka_head, head, tail]
 
 
 def spelling_accept(word):
