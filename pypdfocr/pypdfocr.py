@@ -164,7 +164,7 @@ class PyPDFOCR(object):
         # Deprecating skip_preprocess to make skipping the default (always true). Tesseract 3.04 is so much better now
         # at handling non-ideal inputs and lines
         if args.skip_preprocess:
-            print("Warning: --skip_preprocess is not needed anymore (defaults to skipping preprocessing).  If you want to enable preprocessing, use the new --preprocess option")
+            pass
         self.skip_preprocess = True
 
         if args.preprocess:

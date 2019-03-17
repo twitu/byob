@@ -132,7 +132,7 @@ class PyTesseract(object):
         return version_good, ver_str
 
     def _warn(self, msg):  # pragma: no cover
-        print(("WARNING: %s" % msg))
+        pass
 
     def make_hocr_from_pnms(self, fns):
 

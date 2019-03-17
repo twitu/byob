@@ -49,7 +49,7 @@ class PyPreprocess(object):
         self.threads = config.get('threads', 4)
 
     def _warn(self, msg):  # pragma: no cover
-        print(("WARNING: %s" % msg))
+        pass
 
     def cmd(self, cmd_list):
         if isinstance(cmd_list, list):
