@@ -116,7 +116,7 @@ class PyGs(object):
             error(self.msgs['GS_MISSING_BINARY'])
 
     def _warn(self, msg):
-        print(("WARNING: %s" % msg))
+        pass
 
     def _get_dpi(self, pdf_filename):
         if not os.path.exists(pdf_filename):
