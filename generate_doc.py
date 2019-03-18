@@ -138,7 +138,7 @@ def process_doc(input_path, output_path, parse_mode):
 
                 # don't make tables for single columns
                 if max_col < 2:
-                    print_paragraph_text(line_group, document, parse_mode["large_cutoff"], parse_mode["para_margin"])
+                    print_paragraph_text(line_group, document, page_box, parse_mode["large_cutoff"], parse_mode["para_margin"])
                 else:
                     print_table_text(line_group, document, max_col)
 
