@@ -56,13 +56,16 @@ def spelling_fixer(word):
     fixed_words = []
 
     for word in num_fix_words:
-        if not word.isdigit():
-            seg_words = wordsegment.segment(word)
-        else:
+        if word is not '' and word[0].isupper():
             seg_words = [word]
-        for seg_index in range(len(seg_words)):
-            seg_words[seg_index] = spell_correct.correction(
-                seg_words[seg_index])
+        else:
+            if not word.isdigit():
+                seg_words = wordsegment.segment(word)
+            else:
+                seg_words = [word]
+            for seg_index in range(len(seg_words)):
+                seg_words[seg_index] = spell_correct.correction(
+                    seg_words[seg_index])
         fixed_words += seg_words
     return " ".join(fixed_words)
 
