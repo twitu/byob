@@ -3,6 +3,7 @@ import os
 from os.path import join
 from pypdfocr.pypdfocr import PyPDFOCR
 
+
 def generate_readables(working_dir, files):
     '''
     convert all pdfs in dir_path in 3 formats,
@@ -22,7 +23,7 @@ def generate_readables(working_dir, files):
     if not os.path.isdir(ocr_dir):
         print("creating ocr directory")
         os.mkdir(ocr_dir)
-    
+
     for i, file_name in enumerate(files):
         output_file = file_name.split(".")[0] + "_ocr.pdf"
         output_path = join(ocr_dir, output_file)
@@ -57,7 +58,7 @@ def generate_readables(working_dir, files):
             os.system('pdf2txt.py -t xml ' + input_path + ' > ' + output_path)
         else:
             print("xml version for {} exists".format(file_name))
-    
+
     # create directories for doc and xml
     if not os.path.isdir(doc_dir):
         print("creating doc directory")

@@ -110,7 +110,8 @@ def process_doc(input_path, output_path, parse_mode):
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box, page_width, parse_mode["adj_margin"], parse_mode["large_cutoff"])
+        filter_and_mark(lines, page_box, page_width,
+                        parse_mode["adj_margin"], parse_mode["large_cutoff"])
 
         # correct spellings and discard empty lines
         lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
@@ -127,7 +128,8 @@ def process_doc(input_path, output_path, parse_mode):
             if k == LineType.CENTRE:
                 print_centre_text(line_group, document)
             elif k == LineType.PARA:
-                print_paragraph_text(line_group, document, page_box, parse_mode["large_cutoff"], parse_mode["para_margin"])
+                print_paragraph_text(line_group, document, page_box,
+                                     parse_mode["large_cutoff"], parse_mode["para_margin"])
             elif k == LineType.TABLE:
                 columns = get_columns(line_group)
                 columns.sort()
@@ -138,7 +140,8 @@ def process_doc(input_path, output_path, parse_mode):
 
                 # don't make tables for single columns
                 if max_col < 2:
-                    print_paragraph_text(line_group, document, page_box, parse_mode["large_cutoff"], parse_mode["para_margin"])
+                    print_paragraph_text(
+                        line_group, document, page_box, parse_mode["large_cutoff"], parse_mode["para_margin"])
                 else:
                     print_table_text(line_group, document, max_col)
 

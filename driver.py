@@ -19,23 +19,29 @@ from functools import partial
 # para margin to club lines into paragraphs
 # column margin horizontal margin between columns
 parsing_modes = {
-    'standard':{
+    'standard': {
         'line_margin': 10,
         'merge_margin': 15,
         'adj_margin': 15,
         'large_cutoff': 0.6,
         'para_margin': 20,
-        'column_margin':20
+        'column_margin': 20
     }
 }
 
+
 def make_argument_parser():
-    parser = argparse.ArgumentParser(description="Convert PDF to docs or profit and loss statements to CSV")
-    parser.add_argument("-m", "--mode", help="set parsing mode, default value is standard", required=False, default="standard")
-    parser.add_argument("-p", "--path", help="give input path for file or directory", required=True)
+    parser = argparse.ArgumentParser(
+        description="Convert PDF to docs or profit and loss statements to CSV")
+    parser.add_argument("-m", "--mode", help="set parsing mode, default value is standard",
+                        required=False, default="standard")
+    parser.add_argument(
+        "-p", "--path", help="give input path for file or directory", required=True)
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--csv", help="store profit and loss table in csv", action="store_true")
-    action.add_argument("--doc", help="convert file to doc", action="store_true")
+    action.add_argument(
+        "--csv", help="store profit and loss table in csv", action="store_true")
+    action.add_argument("--doc", help="convert file to doc",
+                        action="store_true")
     return parser
 
 
@@ -48,12 +54,13 @@ if __name__ == "__main__":
         for mode_names in parsing_modes:
             print(" -", mode_names)
         exit()
-    
+
     # check given path and set working directory for making readable files
     input_path = args.path
     if os.path.exists(input_path) and os.path.isdir(input_path):
         working_dir = input_path
-        files = list(filter(lambda x: x.endswith(".pdf"), os.listdir(working_dir)))
+        files = list(filter(lambda x: x.endswith(
+            ".pdf"), os.listdir(working_dir)))
     elif os.path.exists(input_path) and os.path.isfile(input_path):
         working_dir = os.path.dirname(input_path)
         files = [os.path.basename(input_path)]
@@ -86,5 +93,5 @@ if __name__ == "__main__":
                 join(working_dir, "csv", name + ".csv"),
                 parsing_modes[args.mode],
             )
-    
+
     print("All files converted successfully")

@@ -2,6 +2,7 @@ from enum import Enum
 
 import spell_fixer
 
+
 class LineType(Enum):
     CENTRE = 1
     TABLE = 2
@@ -80,7 +81,6 @@ class Line:
                 self.box.y2 = word.box.y2
 
         self.words.append(word)
-        
 
     # get word from list of words
     def __getitem__(self, item):
@@ -166,7 +166,8 @@ def get_lines(page_element, margin=5):
         for text_line in text_box.getchildren():
             if not text_line.tag == "textline":
                 continue
-            bbox = Rectangle(list(map(float, text_line.attrib["bbox"].split(","))))
+            bbox = Rectangle(
+                list(map(float, text_line.attrib["bbox"].split(","))))
             value = ''.join(
                 [text_char.text if text_char.text else " " for text_char in text_line.getchildren()])
             value = value.strip()
@@ -187,6 +188,7 @@ def get_lines(page_element, margin=5):
 
     return lines
 
+
 # filter words and remake lines
 def check_fix_spellings(lines, types):
     new_lines = []
@@ -199,11 +201,12 @@ def check_fix_spellings(lines, types):
         new_line.type = line.type
         for word in line:
             if spell_fixer.spelling_accept(word.value):
-                new_line.add_word(Word(spell_fixer.spelling_fixer(word.value), word.box))
+                new_line.add_word(
+                    Word(spell_fixer.spelling_fixer(word.value), word.box))
         # if new line contains words after filtering add it to list
         if new_line.words:
             new_lines.append(new_line)
-    
+
     return new_lines
 
 
@@ -223,6 +226,7 @@ def get_columns(lines, margin=20):
                 columns.append(Column(word))
     return columns
 
+
 def get_paragraphs(lines, margin=20):
     paras = []
     para = []
@@ -237,6 +241,7 @@ def get_paragraphs(lines, margin=20):
             paras.append(para)
 
     return paras
+
 
 # merge closely spaced words
 def merge_words(lines, margin=15):

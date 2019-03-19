@@ -10,49 +10,51 @@ from text_objects import get_lines, get_columns
 from text_objects import centre_aligned, merge_words, check_fix_spellings
 
 triage_data = {
-    "interest receivable and similar income":"Interest Receivable",
-    "other interest receivable and similar income":"Interest Receivable",
-    "interest payable and similar expenses":"Interest payable and similar charges",
-    "interest payable and expenses":"Interest payable and similar charges",
-    "profit before taxation":"Profit on ordinary activities before taxation",
-    "loss before taxation":"Profit on ordinary activities before taxation",
-    "profit before tax":"Profit on ordinary activities before taxation",
-    "tax on profit":"Tax on profit on ordinary activities",
-    "tax on loss":"Tax on profit on ordinary activities",
-    "cost of raw material and consumables":"Distribution Costs",
-    "cost of materials":"Distribution Costs",
-    "staff costs":"Administrative Expenses",
-    "tax":"Tax on profit on ordinary activities",
-    "taxation":"Tax on profit on ordinary activities",
-    "profit":"Profit for the financial year",
-    "profit for the period":"Profit for the financial year",
-    "loss for the period":"Profit for the financial year",
-    "profit after tax":"Profit for the financial year",
-    "profit for the financial year and total comprehensive income":"Profit for the financial year",
-    "loss for the financial year and total comprehensive income":"Profit for the financial year",
-    "loss for the financial year":"Profit for the financial year", 
-    "loss for the financial year after":"Profit for the financial year",    
-    "other charges":"Interest payable and similar charges",
-    "profit or (loss) for period":"Profit for the financial year",
-    "operating loss":"Operating Profit",
-    "gross profit or (loss)":"Gross Profit",
+    "interest receivable and similar income": "Interest Receivable",
+    "other interest receivable and similar income": "Interest Receivable",
+    "interest payable and similar expenses": "Interest payable and similar charges",
+    "interest payable and expenses": "Interest payable and similar charges",
+    "profit before taxation": "Profit on ordinary activities before taxation",
+    "loss before taxation": "Profit on ordinary activities before taxation",
+    "profit before tax": "Profit on ordinary activities before taxation",
+    "tax on profit": "Tax on profit on ordinary activities",
+    "tax on loss": "Tax on profit on ordinary activities",
+    "cost of raw material and consumables": "Distribution Costs",
+    "cost of materials": "Distribution Costs",
+    "staff costs": "Administrative Expenses",
+    "tax": "Tax on profit on ordinary activities",
+    "taxation": "Tax on profit on ordinary activities",
+    "profit": "Profit for the financial year",
+    "profit for the period": "Profit for the financial year",
+    "loss for the period": "Profit for the financial year",
+    "profit after tax": "Profit for the financial year",
+    "profit for the financial year and total comprehensive income": "Profit for the financial year",
+    "loss for the financial year and total comprehensive income": "Profit for the financial year",
+    "loss for the financial year": "Profit for the financial year",
+    "loss for the financial year after": "Profit for the financial year",
+    "other charges": "Interest payable and similar charges",
+    "profit or (loss) for period": "Profit for the financial year",
+    "operating loss": "Operating Profit",
+    "gross profit or (loss)": "Gross Profit",
     "operating profit or (loss)": "Operating Profit",
-    "profit or (loss) before tax":"Profit on ordinary activities before taxation",
-    "gross profit/(loss)":"Gross Profit",
-    "profit/(loss)":"Profit for the financial year",
-    "less cost of sales":"Cost of sales",
-    "interest payable":"Interest payable and similar charges",
-    "gross surplus or (deficit)":"Gross Profit",
-    "surplus or (deficit) before tax":"Profit on ordinary activities before taxation",
-    "tax on surplus":"Tax on profit on ordinary activities",
-    "surplus or (deficit) for the period":"Profit for the financial year",
-    "operating profit and profit for the financial year before members' remuneration and profit shares available for discretionary division among members ":"Profit for the financial year",
-    "profit for the financial period before members' remuneration and profit shares available for discretionary division among members ":"Profit for the financial year",
-    "profit after taxation being profit for the financial year":"Profit for the financial year"
+    "profit or (loss) before tax": "Profit on ordinary activities before taxation",
+    "gross profit/(loss)": "Gross Profit",
+    "profit/(loss)": "Profit for the financial year",
+    "less cost of sales": "Cost of sales",
+    "interest payable": "Interest payable and similar charges",
+    "gross surplus or (deficit)": "Gross Profit",
+    "surplus or (deficit) before tax": "Profit on ordinary activities before taxation",
+    "tax on surplus": "Tax on profit on ordinary activities",
+    "surplus or (deficit) for the period": "Profit for the financial year",
+    "operating profit and profit for the financial year before members' remuneration and profit shares available for discretionary division among members ": "Profit for the financial year",
+    "profit for the financial period before members' remuneration and profit shares available for discretionary division among members ": "Profit for the financial year",
+    "profit after taxation being profit for the financial year": "Profit for the financial year"
 }
 
 # function to check for table headings
 # table headings takes json file with example headings to compare
+
+
 def detect_heading(lines, file):
     with open(file) as f:
         data = json.load(f)
@@ -120,7 +122,8 @@ def process_csv(input_path, output_path, parse_mode):
         lines.sort(reverse=True)
 
         # filter and mark names with appropriate types
-        filter_and_mark(lines, page_box, page_width, parse_mode["adj_margin"], parse_mode["large_cutoff"])
+        filter_and_mark(lines, page_box, page_width,
+                        parse_mode["adj_margin"], parse_mode["large_cutoff"])
 
         # correct spellings and discard empty lines
         lines = check_fix_spellings(lines, (LineType.PARA, LineType.TABLE))
@@ -157,7 +160,7 @@ def process_csv(input_path, output_path, parse_mode):
 
             with open(output_path, "w") as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',',
-                                        quotechar='"', quoting=csv.QUOTE_ALL)
+                                       quotechar='"', quoting=csv.QUOTE_ALL)
                 for line in table_lines:
                     line.words.sort()
                     csv_line = [None]*(max_col)

@@ -55,14 +55,15 @@ def spelling_fixer(word):
     for word in words:
         num_fix_words += num_check(word)
     fixed_words = []
-    
+
     for word in num_fix_words:
         if not word.isdigit():
             seg_words = wordsegment.segment(word)
         else:
             seg_words = [word]
         for seg_index in range(len(seg_words)):
-            seg_words[seg_index] = spell_correct.correction(seg_words[seg_index])
+            seg_words[seg_index] = spell_correct.correction(
+                seg_words[seg_index])
         fixed_words += seg_words
     print("***", " ".join(fixed_words))
     return " ".join(fixed_words)
@@ -107,7 +108,7 @@ def gen_filter(line, match_lines):
             for words in line:
                 if word.lower() in words.value.lower():
                     flag = True
-            
+
             if not flag:
                 status = False
                 break
@@ -126,7 +127,7 @@ def p_l_filter(lines):
             return True
     return False
 
-        
+
 def set_headers(lines):
     '''
     (Should) Set headers on lines which could be headers
@@ -155,6 +156,7 @@ def set_headers(lines):
         else:
             break
 
+
 def set_footers(lines):
     '''
     (Should) return the lines which are a part of footer
@@ -165,7 +167,7 @@ def set_footers(lines):
         0 = footer continues
         1 = possible footer reached
     '''
-    lines.sort(reverse = True)
+    lines.sort(reverse=True)
     status = 0
     for line in lines:
         if line.type == -1:
@@ -187,7 +189,7 @@ def is_in_lowest_quarter(line):
     Returns true if the line is in the lowermost quarter
     HACK: Terribly hard coded value for y1
     '''
-    if line.box.y1 < 160: 
+    if line.box.y1 < 160:
         return True
     return False
 
