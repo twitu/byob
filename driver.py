@@ -80,18 +80,18 @@ if __name__ == "__main__":
     for file_name in files:
         name = file_name.split(".")[0]
         if args.doc:
-            print("converting {} to doc".format(name))
+            print("Converting {} to Doc".format(name))
             process_doc(
                 join(working_dir, "xml", name + ".xml"),
                 join(working_dir, "doc", name + ".doc"),
                 parsing_modes[args.mode],
             )
         else:
-            print("converting {} to csv".format(name))
+            print("Converting {} to CSV".format(name))
             process_csv(
                 join(working_dir, "xml", name + ".xml"),
                 join(working_dir, "csv", name + ".csv"),
                 parsing_modes[args.mode],
             )
 
-    print("All files converted successfully")
+    print("SUCCESS: Files converted successfully")
