@@ -26,6 +26,15 @@ parsing_modes = {
         'large_cutoff': 0.6,
         'para_margin': 20,
         'column_margin': 20
+    },
+
+    'simplespaced': {
+        'line_margin': 10,
+        'merge_margin': 30,
+        'adj_margin': 15,
+        'large_cutoff': 0.6,
+        'para_margin': 20,
+        'column_margin': 20
     }
 }
 
