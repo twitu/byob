@@ -25,7 +25,9 @@ def correction(word):
 
 def candidates(word):
     "Generate possible spelling corrections for word."
-    if len(word) > 2:
+    if word.isdigit():
+        return [word]
+    elif len(word) > 2:
         return (known([word]) or known(edits1(word)) or known(edits2(word)) or [word])
     else:
         return(known([word]))
