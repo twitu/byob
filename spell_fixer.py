@@ -49,7 +49,6 @@ def spelling_fixer(word):
     '''
     Takes a string and returns its spell corrected value
     '''
-    print(" ".join(word))
     num_fix_words = []
     words = word.split(' ')
     for word in words:
@@ -65,7 +64,6 @@ def spelling_fixer(word):
             seg_words[seg_index] = spell_correct.correction(
                 seg_words[seg_index])
         fixed_words += seg_words
-    print("***", " ".join(fixed_words))
     return " ".join(fixed_words)
 
 
